@@ -1,0 +1,2 @@
+include stock_summary/html_files/*
+include stock_summary/init_datasets/*

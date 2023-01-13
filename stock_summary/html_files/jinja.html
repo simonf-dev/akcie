@@ -1,0 +1,36 @@
+<link rel="stylesheet" href="main.css" media="screen" />
+<div id="my_plot">
+{{ plot_html | safe }}
+</div>
+<h2>Přehled akcií</h2>
+<div class="table-wrapper">
+    <table class="fl-table">
+        <thead>
+        <tr>
+            <th>Symbol</th>
+            <th>Actual price</th>
+            <th>Turning point price</th>
+            <th>Count</th>
+            <th>Cost basis</th>
+            <th>Actual basis</th>
+            <th>Percentage move</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for record in records %}
+        <tr>
+            <td>{{record.symbol}}</td>
+            <td>{{'%0.2f' % record.actual_price|float}} {{record.currency}}</td>
+            <td>{{'%0.2f' % (record.actual_price / (record.actual_basis / record.cost_basis))|float}} {{record.currency}}</td>
+            <td>{{record.count}}</td>
+            <td>{{'%0.2f' % record.cost_basis|float}} CZK</td>
+            <td>{{'%0.2f' % record.actual_basis|float}} CZK</td>
+            <td>{{'%0.2f' % (((record.actual_basis / record.cost_basis) - 1) * 100)|float}} %</td>
+
+
+        </tr>
+        {% endfor %}
+
+        <tbody>
+    </table>
+</div>
