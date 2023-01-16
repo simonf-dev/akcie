@@ -30,7 +30,7 @@ jobs:
         poetry install
     - name: Lint with flake8
       run: |
-        poetry run pylint main.py
+        poetry run pylint stock_summary/
     - name: Test with pytest
       run: |
-        pytest
+        poetry run mypy stock_summary/
