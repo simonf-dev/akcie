@@ -45,7 +45,8 @@ jobs:
         version: ["3.8", "3.9", "3.10", "3.11"]
     steps:
       - uses: actions/download-artifact@v3
-        name: packages
+        with:
+          name: packages
       - uses: actions/checkout@v3
       - name: Python checks
         uses: actions/setup-python@v3
