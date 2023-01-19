@@ -50,6 +50,7 @@ jobs:
       - uses: actions/download-artifact@v3
         with:
           name: packages
+          path: dist
       - uses: actions/checkout@v3
       - name: Python checks
         uses: actions/setup-python@v3
