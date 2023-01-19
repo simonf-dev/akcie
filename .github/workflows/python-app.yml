@@ -33,12 +33,13 @@ jobs:
       run: |
         poetry run mypy stock_summary/
     - name: Pylint checks
+      run: |
+        poetry run pylint stock_summary/
+    - name: Upload artifacts
       uses: actions/upload-artifact@v3
       with:
         name: packages
         path: dist
-      run: |
-        poetry run pylint stock_summary/
   installation-test:
     runs-on: ubuntu-latest
     needs: [build]
