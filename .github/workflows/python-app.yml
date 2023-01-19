@@ -33,6 +33,7 @@ jobs:
       run: |
         poetry run mypy stock_summary/
     - name: Pylint checks
+      uses: actions/upload-artifact@v3
       with:
         name: packages
         path: dist
