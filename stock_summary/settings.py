@@ -5,30 +5,34 @@ from typing import TypedDict
 
 import appdirs
 
-DATA_PATH = appdirs.user_data_dir('stock_summary')
-SETTINGS_PATH = appdirs.user_config_dir('stock_summary')
+DATA_PATH = appdirs.user_data_dir("stock_summary")
+SETTINGS_PATH = appdirs.user_config_dir("stock_summary")
+
+
 class LoggingSettings(Enum):
-    """ Enum which saves settings for logging"""
+    """Enum which saves settings for logging"""
+
     OUTPUT_FILE = "tmp.log"
     LOGGING_LEVEL = logging.DEBUG
 
 
 class PairResponse(TypedDict):
-    """ Pair response that we get from API for each pair."""
+    """Pair response that we get from API for each pair."""
+
     symbol: str
     regularMarketPrice: float
     currency: str
 
+
 class SummaryDict(TypedDict):
-    """ This dict is used to summarize entries for view Jinja HTML"""
+    """This dict is used to summarize entries for view Jinja HTML"""
+
     symbol: str
     actual_price: float
     actual_basis: float
     cost_basis: float
     count: float
     currency: str
-
-
 
 
 PAIR_PATH = f"{DATA_PATH}/pairs"
@@ -38,7 +42,7 @@ INDEX_HTML_FILE = f"{DATA_PATH}/index.html"
 MAIN_CSS_FILE = f"{DATA_PATH}/main.css"
 TOKEN_PATH = f"{SETTINGS_PATH}/token"
 try:
-    with open(TOKEN_PATH,"r", encoding="utf-8") as token_file:
+    with open(TOKEN_PATH, "r", encoding="utf-8") as token_file:
         API_TOKEN = token_file.read().strip()
 except FileNotFoundError:
     API_TOKEN = ""

@@ -1,32 +1,38 @@
 """ Module with main functionality of the tool"""
 import csv
+import datetime
 import logging
 import os
-import datetime
 import pathlib
-import shutil
 import platform
+import shutil
 import sys
 import webbrowser
 from typing import List
 
 import jinja2
+
 logging_level = os.environ.get("DEBUG_LEVEL")
 logging.basicConfig(level=logging_level if logging_level else "INFO")
-from stock_summary.library import (export_data, get_entries_summary,
-                                   get_exchange_rates, get_pair_prices,
-                                   get_plot_html, import_data,
-                                   prepare_portfolio_data, validate_date)
-from stock_summary.parsers import (add_entry_parser, export_parser,
-                                   import_parser)
-from stock_summary.settings import (ENTRIES_PATH, INDEX_HTML_FILE,
-                                    MAIN_CSS_FILE, PORTFOLIO_PATH,
-                                    TOKEN_PATH, SETTINGS_PATH)
-
-
-
-
-
+from stock_summary.library import (
+    export_data,
+    get_entries_summary,
+    get_exchange_rates,
+    get_pair_prices,
+    get_plot_html,
+    import_data,
+    prepare_portfolio_data,
+    validate_date,
+)
+from stock_summary.parsers import add_entry_parser, export_parser, import_parser
+from stock_summary.settings import (
+    ENTRIES_PATH,
+    INDEX_HTML_FILE,
+    MAIN_CSS_FILE,
+    PORTFOLIO_PATH,
+    SETTINGS_PATH,
+    TOKEN_PATH,
+)
 
 
 def get_pairs() -> List[str]:
@@ -68,12 +74,17 @@ def generate_portfolio_main() -> None:
         (curr_value / init_value - 1) * 100,
     )
 
+
 def save_entry(date: str, stock: str, count: str, price: str) -> None:
     """Save entries to CSV file."""
     with open(ENTRIES_PATH, "a", newline="", encoding="utf-8") as csvfile:
         csv_writer = csv.writer(csvfile, delimiter=" ", quotechar="|")
         csv_writer.writerow([date, stock, count, price])
-    logging.debug(f"Entry date: {date} stock: {stock} count: {count} price: {price} saved to {ENTRIES_PATH}")
+    logging.debug(
+        f"Entry date: {date} stock: {stock} count: {count} "
+        f"price: {price} saved to {ENTRIES_PATH}"
+    )
+
 
 def generate_html_main() -> None:
     """
@@ -83,11 +94,17 @@ def generate_html_main() -> None:
     portfolio_data = prepare_portfolio_data()
     plot_html = get_plot_html(portfolio_data)
     environment = jinja2.Environment()
-    with open(f"{pathlib.Path(__file__).parent.resolve()}/html_files/jinja.html", "r", encoding="utf-8") as html_template:
+    with open(
+        f"{pathlib.Path(__file__).parent.resolve()}/html_files/jinja.html",
+        "r",
+        encoding="utf-8",
+    ) as html_template:
         template = environment.from_string(html_template.read())
     with open(INDEX_HTML_FILE, "w", encoding="utf-8") as index_file:
         index_file.write(template.render(plot_html=plot_html, records=summary_records))
-    shutil.copy2(f"{pathlib.Path(__file__).parent.resolve()}/html_files/main.css", MAIN_CSS_FILE)
+    shutil.copy2(
+        f"{pathlib.Path(__file__).parent.resolve()}/html_files/main.css", MAIN_CSS_FILE
+    )
     logging.info(f"Index html file successfully saved to {INDEX_HTML_FILE}")
     prepend_str = ""
     if platform.system().lower() == "darwin":
@@ -122,8 +139,9 @@ def add_entry_main() -> None:
         options.price,
     )
 
+
 def export_data_main() -> None:
-    """ Main function for export data command."""
+    """Main function for export data command."""
     parser = export_parser()
     (options, _) = parser.parse_args()
     if not options.directory:
@@ -131,19 +149,25 @@ def export_data_main() -> None:
         sys.exit(1)
     export_data(options.directory)
 
+
 def import_data_main() -> None:
-    """ Main function for import data command."""
+    """Main function for import data command."""
     parser = import_parser()
     (options, _) = parser.parse_args()
     if options.portfolio:
         import_data(options.portfolio, PORTFOLIO_PATH)
-        logging.info(f"Portfolio {options.portfolio} successfully updated to {PORTFOLIO_PATH}")
+        logging.info(
+            f"Portfolio {options.portfolio} successfully updated to {PORTFOLIO_PATH}"
+        )
     if options.entries:
         import_data(options.entries, ENTRIES_PATH)
-        logging.info(f"Entries {options.entries} successfully updated to {ENTRIES_PATH}")
+        logging.info(
+            f"Entries {options.entries} successfully updated to {ENTRIES_PATH}"
+        )
+
 
 def save_token_main() -> None:
-    """ Main function for save token command."""
+    """Main function for save token command."""
     token = sys.argv[2]
     os.makedirs(SETTINGS_PATH, exist_ok=True)
     with open(TOKEN_PATH, "w", encoding="utf-8") as token_file:
@@ -152,7 +176,7 @@ def save_token_main() -> None:
 
 
 def print_main_help() -> None:
-    """ Prints main help """
+    """Prints main help"""
     print(
         "Available commands:\n\n"
         "add-entry [opts] - add entry for current date, stock, count and price\n\n"
@@ -164,8 +188,9 @@ def print_main_help() -> None:
         "save-token (token) - save your token to rapidAPI\n\n"
     )
 
+
 def main() -> None:
-    """ Main function."""
+    """Main function."""
     try:
         if sys.argv[1] == "generate-html":
             generate_html_main()
@@ -191,6 +216,8 @@ def main() -> None:
         logging.error(err)
         raise err
     sys.exit(1)
+
+
 # Press the green button in the gutter to run the script.
 if __name__ == "__main__":
     main()

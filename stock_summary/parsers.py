@@ -1,9 +1,9 @@
 """ parser functions """
-import optparse
+import optparse  # pylint: disable=W4901
 
 
 def add_entry_parser() -> optparse.OptionParser:
-    """ Parser for entry command. """
+    """Parser for entry command."""
     parser = optparse.OptionParser(
         usage="main.py add-entry [options]\n" "Add pair to to the list"
     )
@@ -17,8 +17,9 @@ def add_entry_parser() -> optparse.OptionParser:
     parser.add_option("-p", "--price", dest="price", help="Price of the stocks.")
     return parser
 
+
 def import_parser() -> optparse.OptionParser:
-    """ Parser for import command """
+    """Parser for import command"""
     parser = optparse.OptionParser(
         usage="main.py import-data [options]\n" "Import data from your custom files."
     )
@@ -26,16 +27,21 @@ def import_parser() -> optparse.OptionParser:
         "-e", "--entries", dest="entries", help="Path to your custom file with entries."
     )
     parser.add_option(
-        "-p", "--portfolio", dest="portfolio", help="Path to your custom file with portfolio."
+        "-p",
+        "--portfolio",
+        dest="portfolio",
+        help="Path to your custom file with portfolio.",
     )
 
     return parser
 
+
 def export_parser() -> optparse.OptionParser:
-    """ Parser for export command."""
+    """Parser for export command."""
     parser = optparse.OptionParser(
-        usage="main.py import-data [options]\n" "Export data from your custom files to some"
-              "directory."
+        usage="main.py import-data [options]\n"
+        "Export data from your custom files to some"
+        "directory."
     )
     parser.add_option(
         "-d", "--directory", dest="directory", help="Path to directory for the output."

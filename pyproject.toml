@@ -35,3 +35,10 @@ stock_summary_tool = "stock_summary.main:main"
 [[tool.mypy.overrides]]
 module = "plotly.*"
 ignore_missing_imports= true
+
+[tool.pylint.overrides]
+disable = ["W1203"]
+fail-under = 9.5
+
+[tool.isort]
+profile = "black"

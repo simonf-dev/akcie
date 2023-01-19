@@ -2,11 +2,11 @@
 import csv
 import datetime
 import json
+import logging
 import os
 import pathlib
 import shutil
 import sys
-import logging
 from pathlib import Path
 from typing import Any, Dict, List
 
@@ -14,12 +14,17 @@ import pandas as pd
 import plotly.express as px
 import requests
 
-from stock_summary.settings import (DATA_PATH, ENTRIES_PATH,
-                                    EXCHANGE_RATE_HEADERS, EXCHANGE_RATE_URL,
-                                    PORTFOLIO_PATH, STOCK_PRICE_HEADERS,
-                                    STOCK_PRICE_URL,
-                                    PairResponse, SummaryDict)
-
+from stock_summary.settings import (
+    DATA_PATH,
+    ENTRIES_PATH,
+    EXCHANGE_RATE_HEADERS,
+    EXCHANGE_RATE_URL,
+    PORTFOLIO_PATH,
+    STOCK_PRICE_HEADERS,
+    STOCK_PRICE_URL,
+    PairResponse,
+    SummaryDict,
+)
 
 
 def check_pair_responses(pairs: List[PairResponse]) -> None:
@@ -29,10 +34,13 @@ def check_pair_responses(pairs: List[PairResponse]) -> None:
             raise ValueError(f"Entered symbol {pair['symbol']} has invalid price <=0.")
     logging.debug(f"Successfully checked responses for {pairs}")
 
+
 def get_exchange_rates() -> Dict[str, float]:
     """Returns dict with actual values for conversions between other currencies and CZK"""
 
-    response = requests.request("GET", EXCHANGE_RATE_URL, headers=EXCHANGE_RATE_HEADERS, timeout=10)
+    response = requests.request(
+        "GET", EXCHANGE_RATE_URL, headers=EXCHANGE_RATE_HEADERS, timeout=10
+    )
     exchange_dict = {}
     for key, value in json.loads(response.text)["rates"].items():
         exchange_dict[key] = 1 / value
@@ -83,7 +91,7 @@ def get_entries_summary() -> Dict[str, SummaryDict]:
                     "cost_basis": 0,
                     "actual_basis": 0,
                     "currency": "",
-                    "actual_price": 0
+                    "actual_price": 0,
                 }
             entries_dict[entry[1]]["count"] += float(entry[2])
             entries_dict[entry[1]]["cost_basis"] += float(entry[2]) * float(entry[3])
@@ -103,14 +111,14 @@ def get_entries_summary() -> Dict[str, SummaryDict]:
 
 
 def prepare_portfolio_data() -> Any:
-    """ Prepares portfolio data and returns them as pandas dataset"""
+    """Prepares portfolio data and returns them as pandas dataset"""
     dataset = pd.read_csv(PORTFOLIO_PATH, sep=" ")
     dataset["DATE"] = pd.to_datetime(dataset["DATE"], format="%d/%m/%y")
     return dataset
 
 
 def get_plot_html(dataset: Any) -> Any:
-    """ Exports plot as HTML and returns it."""
+    """Exports plot as HTML and returns it."""
     fig = px.line(
         dataset,
         x="DATE",
@@ -121,17 +129,23 @@ def get_plot_html(dataset: Any) -> Any:
     )
     return fig.to_html()
 
+
 def check_if_files_exist() -> None:
-    """ Check if files exist in memory, if not then creates them with initialized headers."""
+    """Check if files exist in memory, if not then creates them with initialized headers."""
     os.makedirs(DATA_PATH, exist_ok=True)
     if not os.path.exists(ENTRIES_PATH):
-        shutil.copy2(f"{pathlib.Path(__file__).parent.resolve()}/init_datasets/entries",
-                     ENTRIES_PATH)
+        shutil.copy2(
+            f"{pathlib.Path(__file__).parent.resolve()}/init_datasets/entries",
+            ENTRIES_PATH,
+        )
         logging.debug(f"Created init entries file {ENTRIES_PATH}")
     if not os.path.exists(PORTFOLIO_PATH):
-        shutil.copy2(f"{pathlib.Path(__file__).parent.resolve()}/init_datasets/portfolio",
-                     PORTFOLIO_PATH)
+        shutil.copy2(
+            f"{pathlib.Path(__file__).parent.resolve()}/init_datasets/portfolio",
+            PORTFOLIO_PATH,
+        )
         logging.debug(f"Created init portfolio file {ENTRIES_PATH}")
+
 
 def import_data(from_file: str, to_file: str) -> None:
     """
@@ -139,13 +153,16 @@ def import_data(from_file: str, to_file: str) -> None:
     asks user for confirmation
     """
     if os.path.exists(to_file):
-        confirmation = input("You will rewrite your actual saved data, are you sure to proceed? "
-                             "Type Y: ")
+        confirmation = input(
+            "You will rewrite your actual saved data, are you sure to proceed? "
+            "Type Y: "
+        )
         if not confirmation.lower() == "y":
             logging.error("Action canceled, ending without any action.")
             sys.exit(1)
     shutil.copy2(from_file, to_file)
     logging.debug(f"Successfully moved data from {from_file} to {to_file}")
+
 
 def export_data(directory: str) -> None:
     """
