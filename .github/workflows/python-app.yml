@@ -50,7 +50,7 @@ jobs:
           python-version: ${{ matrix.version }}
       - name: Package installation
         run: |
-          pip install stock_summary*.whl
+          pip install dist/stock_summary*.whl
           
 
 
