@@ -35,6 +35,7 @@ jobs:
       run: |
         poetry run mypy stock_summary/
     - name: Pylint checks
+      run: |
         poetry run pylint stock_summary/
 
 
