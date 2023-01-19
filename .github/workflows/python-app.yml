@@ -44,7 +44,7 @@ jobs:
       matrix:
         version: ["3.8", "3.9", "3.10", "3.11"]
     steps:
-      - uses: actions/download-artifact
+      - uses: actions/download-artifact@v3
         name: packages
       - uses: actions/checkout@v3
       - name: Python checks
