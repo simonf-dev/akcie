@@ -63,6 +63,9 @@ jobs:
       - name: Sanity tests
         run: |
           stock_summary_tool --help
+          stock_summary_tool import-data -e stock_summary/demo_datasets/entries -p stock_summary/demo_datasets/portfolio
+          stock_summary_tool export-data -d output_files/
+
           
 
 
