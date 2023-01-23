@@ -47,16 +47,17 @@ jobs:
       matrix:
         version: ["3.8", "3.9", "3.10", "3.11"]
     steps:
+      - uses: actions/checkout@v3
       - uses: actions/download-artifact@v3
         with:
           name: packages
-      - uses: actions/checkout@v3
       - name: Python checks
         uses: actions/setup-python@v3
         with:
           python-version: ${{ matrix.version }}
       - name: Package installation
         run: |
+          ls -la .
           readlink -f .
           ls ./dist
           pip install dist/stock_summary*.whl
