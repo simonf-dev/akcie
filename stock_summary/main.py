@@ -23,6 +23,7 @@ from stock_summary.library import (
     import_data,
     prepare_portfolio_data,
     validate_date,
+    check_if_files_exist
 )
 from stock_summary.parsers import add_entry_parser, export_parser, import_parser
 from stock_summary.settings import (
@@ -192,6 +193,7 @@ def print_main_help() -> None:
 def main() -> None:
     """Main function."""
     try:
+        check_if_files_exist()
         if sys.argv[1] == "generate-html":
             generate_html_main()
         elif sys.argv[1] == "add-entry":
