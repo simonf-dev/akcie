@@ -58,10 +58,10 @@ jobs:
           python-version: ${{ matrix.version }}
       - name: Package installation
         run: |
-          ls -la .
-          readlink -f .
           ls ./dist
           pip install dist/stock_summary*.whl
+      - name: Sanity tests
+          stock_summary --help
           
 
 
