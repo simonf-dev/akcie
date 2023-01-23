@@ -61,6 +61,7 @@ jobs:
           ls ./dist
           pip install dist/stock_summary*.whl
       - name: Sanity tests
+        run: |
           stock_summary --help
           
 
