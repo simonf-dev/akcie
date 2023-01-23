@@ -33,6 +33,14 @@ def import_parser() -> optparse.OptionParser:
         help="Path to your custom file with portfolio.",
     )
 
+    parser.add_option(
+        "-y",
+        dest="confirmation",
+        action="store_true",
+        help="Flag to automatically confirm all actions as overwrite of your current datafiles",
+        default=False
+    )
+
     return parser
 
 

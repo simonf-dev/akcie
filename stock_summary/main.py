@@ -156,12 +156,12 @@ def import_data_main() -> None:
     parser = import_parser()
     (options, _) = parser.parse_args()
     if options.portfolio:
-        import_data(options.portfolio, PORTFOLIO_PATH)
+        import_data(options.portfolio, PORTFOLIO_PATH, options.confirmation)
         logging.info(
             f"Portfolio {options.portfolio} successfully updated to {PORTFOLIO_PATH}"
         )
     if options.entries:
-        import_data(options.entries, ENTRIES_PATH)
+        import_data(options.entries, ENTRIES_PATH, options.confirmation)
         logging.info(
             f"Entries {options.entries} successfully updated to {ENTRIES_PATH}"
         )

@@ -147,12 +147,12 @@ def check_if_files_exist() -> None:
         logging.debug(f"Created init portfolio file {ENTRIES_PATH}")
 
 
-def import_data(from_file: str, to_file: str) -> None:
+def import_data(from_file: str, to_file: str, confirmation: bool = False) -> None:
     """
     Imports data from entry file to target file. If target file already exists, then
     asks user for confirmation
     """
-    if os.path.exists(to_file):
+    if os.path.exists(to_file) and not confirmation:
         confirmation = input(
             "You will rewrite your actual saved data, are you sure to proceed? "
             "Type Y: "
