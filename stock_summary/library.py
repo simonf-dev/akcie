@@ -153,11 +153,11 @@ def import_data(from_file: str, to_file: str, confirmation: bool = False) -> Non
     asks user for confirmation
     """
     if os.path.exists(to_file) and not confirmation:
-        confirmation = input(
+        user_confirmation = input(
             "You will rewrite your actual saved data, are you sure to proceed? "
             "Type Y: "
         )
-        if not confirmation.lower() == "y":
+        if not user_confirmation.lower() == "y":
             logging.error("Action canceled, ending without any action.")
             sys.exit(1)
     shutil.copy2(from_file, to_file)
