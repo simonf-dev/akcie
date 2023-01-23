@@ -215,7 +215,7 @@ def main() -> None:
     except (RuntimeError, ValueError) as err:
         logging.error(err)
         raise err
-    sys.exit(1)
+    sys.exit(0)
 
 
 # Press the green button in the gutter to run the script.
