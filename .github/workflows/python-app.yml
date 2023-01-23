@@ -57,7 +57,7 @@ jobs:
           python-version: ${{ matrix.version }}
       - name: Package installation
         run: |
-          ls .
+          readlink -f .
           ls ./dist
           pip install dist/stock_summary*.whl
           
