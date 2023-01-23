@@ -51,6 +51,7 @@ jobs:
       - uses: actions/download-artifact@v3
         with:
           name: packages
+          path: ./dist
       - name: Python checks
         uses: actions/setup-python@v3
         with:
