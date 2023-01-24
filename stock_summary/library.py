@@ -130,16 +130,16 @@ def get_plot_html(dataset: Any) -> Any:
     return fig.to_html()
 
 
-def check_if_files_exist() -> None:
+def rewrite_data_files(rewrite: bool = False) -> None:
     """Check if files exist in memory, if not then creates them with initialized headers."""
     os.makedirs(DATA_PATH, exist_ok=True)
-    if not os.path.exists(ENTRIES_PATH):
+    if rewrite or not os.path.exists(ENTRIES_PATH):
         shutil.copy2(
             f"{pathlib.Path(__file__).parent.resolve()}/init_datasets/entries",
             ENTRIES_PATH,
         )
         logging.debug(f"Created init entries file {ENTRIES_PATH}")
-    if not os.path.exists(PORTFOLIO_PATH):
+    if rewrite or not os.path.exists(PORTFOLIO_PATH):
         shutil.copy2(
             f"{pathlib.Path(__file__).parent.resolve()}/init_datasets/portfolio",
             PORTFOLIO_PATH,
@@ -147,19 +147,11 @@ def check_if_files_exist() -> None:
         logging.debug(f"Created init portfolio file {ENTRIES_PATH}")
 
 
-def import_data(from_file: str, to_file: str, confirmation: bool = False) -> None:
+def import_data(from_file: str, to_file: str) -> None:
     """
     Imports data from entry file to target file. If target file already exists, then
     asks user for confirmation
     """
-    if os.path.exists(to_file) and not confirmation:
-        user_confirmation = input(
-            "You will rewrite your actual saved data, are you sure to proceed? "
-            "Type Y: "
-        )
-        if not user_confirmation.lower() == "y":
-            logging.error("Action canceled, ending without any action.")
-            sys.exit(1)
     shutil.copy2(from_file, to_file)
     logging.debug(f"Successfully moved data from {from_file} to {to_file}")
 

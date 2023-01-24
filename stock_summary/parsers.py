@@ -41,6 +41,15 @@ def import_parser() -> optparse.OptionParser:
         default=False
     )
 
+    parser.add_option(
+        "--initialize",
+        dest="initialize",
+        action="store_true",
+        help="Flag for initialization of basic data false, has to be used with -y, or it has no"
+             "effect.",
+        default=False
+    )
+
     return parser
 
 

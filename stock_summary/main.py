@@ -23,7 +23,7 @@ from stock_summary.library import (
     import_data,
     prepare_portfolio_data,
     validate_date,
-    check_if_files_exist
+    rewrite_data_files
 )
 from stock_summary.parsers import add_entry_parser, export_parser, import_parser
 from stock_summary.settings import (
@@ -155,13 +155,28 @@ def import_data_main() -> None:
     """Main function for import data command."""
     parser = import_parser()
     (options, _) = parser.parse_args()
+    if (options.portfolio or options.entries) and options.initialize:
+        logging.error("Using rewrite option with entries and portfolio options, no effect.")
+        sys.exit(1)
+    if options.initialize and options.confirmation:
+        rewrite_data_files(rewrite=True)
+        logging.info("Data files initialized with empty files with correct headers.")
+        return
+    if not options.confirmation:
+        user_confirmation = input(
+            "You will rewrite your actual saved data, are you sure to proceed? "
+            "Type Y: "
+        )
+        if not user_confirmation.lower() == "y":
+            logging.error("Action canceled, ending without any action.")
+            sys.exit(1)
     if options.portfolio:
-        import_data(options.portfolio, PORTFOLIO_PATH, options.confirmation)
+        import_data(options.portfolio, PORTFOLIO_PATH)
         logging.info(
             f"Portfolio {options.portfolio} successfully updated to {PORTFOLIO_PATH}"
         )
     if options.entries:
-        import_data(options.entries, ENTRIES_PATH, options.confirmation)
+        import_data(options.entries, ENTRIES_PATH)
         logging.info(
             f"Entries {options.entries} successfully updated to {ENTRIES_PATH}"
         )
@@ -193,7 +208,7 @@ def print_main_help() -> None:
 def main() -> None:
     """Main function."""
     try:
-        check_if_files_exist()
+        rewrite_data_files()
         if sys.argv[1] == "generate-html":
             generate_html_main()
         elif sys.argv[1] == "add-entry":
