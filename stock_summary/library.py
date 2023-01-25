@@ -9,7 +9,8 @@ import shutil
 import sys
 from pathlib import Path
 from typing import Any, Dict, List
-
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 import pandas as pd
 import plotly.express as px
 import requests
@@ -119,14 +120,33 @@ def prepare_portfolio_data() -> Any:
 
 def get_plot_html(dataset: Any) -> Any:
     """Exports plot as HTML and returns it."""
-    fig = px.line(
-        dataset,
-        x="DATE",
-        y="TOTAL_PRICE",
-        title="Přehled portfolia v čase",
-        labels={"DATE": "Čas", "TOTAL_PRICE": "Hodnota portfolia"},
-        hover_data={"DATE": "|%d/%m/%y"},
+    # Create figure with secondary y-axis
+    fig = make_subplots(specs=[[{"secondary_y": True}]])
+
+    # Add traces
+    fig.add_trace(
+        go.Scatter(x=dataset["DATE"], y=dataset["TOTAL_PRICE"], name="AKTUÁLNÍ HODNOTA"),
+        secondary_y=False,
     )
+
+    fig.add_trace(
+        go.Scatter(x=dataset["DATE"], y=dataset["PROFIT"], name="PROFIT"),
+        secondary_y=True,
+    )
+
+    # Add figure title
+    fig.update_layout(
+        title_text="Přehled portfolia v čase"
+    )
+
+    # Set x-axis title
+    fig.update_xaxes(title_text="Čas")
+
+    # Set y-axes titles
+    fig.update_yaxes(title_text="<b>AKTUÁLNÍ HODNOTA</b>", secondary_y=False)
+    fig.update_yaxes(title_text="<b>PROFIT</b>", secondary_y=True)
+
+    fig.show()
     return fig.to_html()
 
 

@@ -4,3 +4,4 @@ venv/*
 tmp.log
 datasets/*
 dist/
+demo_data/*

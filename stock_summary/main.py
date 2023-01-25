@@ -67,12 +67,12 @@ def generate_portfolio_main() -> None:
     with open(PORTFOLIO_PATH, "a", encoding="utf-8") as result_file:
         now = datetime.datetime.now()
         result_file.write(
-            f"{now.strftime('%d/%m/%y')} {curr_value} {(curr_value / init_value - 1) * 100}\n"
+            f"{now.strftime('%d/%m/%y')} {curr_value} {curr_value - init_value}\n"
         )
     logging.info(
-        "Portfolio with price %s and percentage move %s generated and added.",
+        "Portfolio with cost basis %s and profit %s generated and added.",
         curr_value,
-        (curr_value / init_value - 1) * 100,
+        curr_value - init_value,
     )
 
 
@@ -123,12 +123,10 @@ def add_entry_main() -> None:
         logging.error("You have to enter all needed params")
         raise ValueError("You have to enter all needed params")
     pair = options.stock.strip()
-    if pair not in get_pairs():
-        raise ValueError("Adding non existing stock symbol.")
     try:
         validate_date(options.date)
         int(options.count)
-        int(options.price)
+        float(options.price)
     except TypeError as err:
         raise RuntimeError("parameters have bad types, please try again") from err
     save_entry(options.date, options.stock, options.count, options.price)
