@@ -32,7 +32,12 @@ def import_parser() -> optparse.OptionParser:
         dest="portfolio",
         help="Path to your custom file with portfolio.",
     )
-
+    parser.add_option(
+        "-d",
+        "--dividends",
+        dest="dividends",
+        help="Path to your custom file with dividends.",
+    )
     parser.add_option(
         "-y",
         dest="confirmation",
@@ -64,4 +69,19 @@ def export_parser() -> optparse.OptionParser:
         "-d", "--directory", dest="directory", help="Path to directory for the output."
     )
 
+    return parser
+
+def dividend_parser() -> optparse.OptionParser:
+    """Parser for dividend command."""
+    parser = optparse.OptionParser(
+        usage="main.py add-entry [options]\n" "Add dividend entry to to the list"
+    )
+    parser.add_option(
+        "-s", "--stock", dest="stock", help="Symbol of the stock for dividend."
+    )
+    parser.add_option(
+        "-d", "--date", dest="date", help="Date of the dividend entry, please add as DD/MM/YYYY"
+    )
+    parser.add_option("-a", "--amount", dest="amount", help="Amount of the earned money "
+                                                            "(in stock currency)")
     return parser

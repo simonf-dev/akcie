@@ -8,13 +8,14 @@ import pathlib
 import shutil
 import sys
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import pandas as pd
 import plotly.express as px
 import requests
 
+from functools import lru_cache
 from stock_summary.settings import (
     DATA_PATH,
     ENTRIES_PATH,
@@ -24,7 +25,7 @@ from stock_summary.settings import (
     STOCK_PRICE_HEADERS,
     STOCK_PRICE_URL,
     PairResponse,
-    SummaryDict,
+    SummaryDict, DIVIDEND_PATH,
 )
 
 
@@ -35,12 +36,14 @@ def check_pair_responses(pairs: List[PairResponse]) -> None:
             raise ValueError(f"Entered symbol {pair['symbol']} has invalid price <=0.")
     logging.debug(f"Successfully checked responses for {pairs}")
 
-
-def get_exchange_rates() -> Dict[str, float]:
+@lru_cache()
+def get_exchange_rates(date: Optional[datetime.datetime] = None, base_pair: str = "CZK") -> Dict[str, float]:
     """Returns dict with actual values for conversions between other currencies and CZK"""
-
+    url = f"{EXCHANGE_RATE_URL}/latest" if date is None else \
+        f"{EXCHANGE_RATE_URL}/{date.strftime('%Y-%m-%d')}"
     response = requests.request(
-        "GET", EXCHANGE_RATE_URL, headers=EXCHANGE_RATE_HEADERS, timeout=10
+        "GET", url, timeout=10, headers=EXCHANGE_RATE_HEADERS,
+        params={"base": base_pair}
     )
     exchange_dict = {}
     for key, value in json.loads(response.text)["rates"].items():
@@ -66,13 +69,14 @@ def get_pair_prices(pairs: List[str]) -> Dict[str, PairResponse]:
     return result_dict
 
 
-def validate_date(date_text: str) -> None:
+def validate_date(date_text: str) -> datetime.datetime:
     """Validates date to our custom format."""
     try:
-        datetime.datetime.strptime(date_text, "%d/%m/%Y")
+        date = datetime.datetime.strptime(date_text, "%d/%m/%Y")
+        logging.debug(f"Validated data for {date_text}")
+        return date
     except ValueError as err:
         raise ValueError("Incorrect data format, should be DD/MM/YYYY") from err
-    logging.debug(f"Validated data for {date_text}")
 
 
 def get_entries_summary() -> Dict[str, SummaryDict]:
@@ -95,15 +99,12 @@ def get_entries_summary() -> Dict[str, SummaryDict]:
                     "actual_price": 0,
                 }
             entries_dict[entry[1]]["count"] += float(entry[2])
-            entries_dict[entry[1]]["cost_basis"] += float(entry[2]) * float(entry[3])
+            entries_dict[entry[1]]["cost_basis"] += float(entry[4])
     exchange_rates = get_exchange_rates()
     pair_prices = get_pair_prices(list(entries_dict.keys()))
     for key, value in entries_dict.items():
         value["currency"] = pair_prices[key]["currency"]
         value["actual_price"] = pair_prices[key]["regularMarketPrice"]
-        value["cost_basis"] = (
-            value["cost_basis"] * exchange_rates[pair_prices[key]["currency"]]
-        )
         value["actual_basis"] = (
             value["count"] * pair_prices[key]["regularMarketPrice"]
         ) * exchange_rates[pair_prices[key]["currency"]]
@@ -165,6 +166,12 @@ def rewrite_data_files(rewrite: bool = False) -> None:
             PORTFOLIO_PATH,
         )
         logging.debug(f"Created init portfolio file {ENTRIES_PATH}")
+    if rewrite or not os.path.exists(DIVIDEND_PATH):
+        shutil.copy2(
+            f"{pathlib.Path(__file__).parent.resolve()}/init_datasets/dividends",
+            DIVIDEND_PATH,
+        )
+        logging.debug(f"Created init portfolio file {DIVIDEND_PATH}")
 
 
 def import_data(from_file: str, to_file: str) -> None:
@@ -184,3 +191,19 @@ def export_data(directory: str) -> None:
     os.makedirs(path, exist_ok=True)
     shutil.copy2(ENTRIES_PATH, f"{path}/{ENTRIES_PATH.split('/')[-1]}")
     shutil.copy2(PORTFOLIO_PATH, f"{path}/{PORTFOLIO_PATH.split('/')[-1]}")
+    shutil.copy2(DIVIDEND_PATH, f"{path}/{DIVIDEND_PATH.split('/')[-1]}")
+
+def save_dividend(date: datetime.datetime, stock: str, amount: float) -> None:
+    currency = get_pair_prices(list(get_entries_summary().keys()))[stock]["currency"]
+    converted_amount = convert_currency(date, currency, "CZK", amount)
+    with open(DIVIDEND_PATH, "a", newline="", encoding="utf-8") as csvfile:
+        csv_writer = csv.writer(csvfile, delimiter=" ", quotechar="|")
+        csv_writer.writerow([date.strftime("%d/%m/%Y"), stock, amount, converted_amount])
+    logging.debug(
+        f"Dividend date: {date} stock: {stock} amount: {amount} "
+        f"converted_amount: {converted_amount} saved to {DIVIDEND_PATH}"
+    )
+
+def convert_currency(date:datetime.datetime, from_curr: str, to_curr: str, amount: float) -> float:
+    exchange_rates = get_exchange_rates(date, to_curr)
+    return amount * exchange_rates[from_curr]

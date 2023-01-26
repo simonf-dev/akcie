@@ -23,9 +23,10 @@ from stock_summary.library import (
     import_data,
     prepare_portfolio_data,
     validate_date,
-    rewrite_data_files
+    rewrite_data_files,
+    save_dividend, convert_currency
 )
-from stock_summary.parsers import add_entry_parser, export_parser, import_parser
+from stock_summary.parsers import add_entry_parser, export_parser, import_parser, dividend_parser
 from stock_summary.settings import (
     ENTRIES_PATH,
     INDEX_HTML_FILE,
@@ -33,6 +34,7 @@ from stock_summary.settings import (
     PORTFOLIO_PATH,
     SETTINGS_PATH,
     TOKEN_PATH,
+    DIVIDEND_PATH
 )
 
 
@@ -60,9 +62,8 @@ def generate_portfolio_main() -> None:
             if not row:
                 continue
             count = float(row[2])
-            init_price = float(row[3])
             conversion_rate = conversion_rates[prices[row[1]]["currency"]]
-            init_value += count * init_price * conversion_rate
+            init_value += float(row[4])
             curr_value += count * prices[row[1]]["regularMarketPrice"] * conversion_rate
     with open(PORTFOLIO_PATH, "a", encoding="utf-8") as result_file:
         now = datetime.datetime.now()
@@ -76,11 +77,11 @@ def generate_portfolio_main() -> None:
     )
 
 
-def save_entry(date: str, stock: str, count: str, price: str) -> None:
+def save_entry(date: str, stock: str, count: str, price: str, converted_amount: float) -> None:
     """Save entries to CSV file."""
     with open(ENTRIES_PATH, "a", newline="", encoding="utf-8") as csvfile:
         csv_writer = csv.writer(csvfile, delimiter=" ", quotechar="|")
-        csv_writer.writerow([date, stock, count, price])
+        csv_writer.writerow([date, stock, count, price, converted_amount])
     logging.debug(
         f"Entry date: {date} stock: {stock} count: {count} "
         f"price: {price} saved to {ENTRIES_PATH}"
@@ -124,12 +125,14 @@ def add_entry_main() -> None:
         raise ValueError("You have to enter all needed params")
     pair = options.stock.strip()
     try:
-        validate_date(options.date)
-        int(options.count)
-        float(options.price)
+        date = validate_date(options.date)
+        count = float(options.count)
+        price = float(options.price)
     except TypeError as err:
         raise RuntimeError("parameters have bad types, please try again") from err
-    save_entry(options.date, options.stock, options.count, options.price)
+    currency = get_pair_prices(list(get_entries_summary().keys()))[options.stock]["currency"]
+    converted_amount = convert_currency(date, currency, "CZK", count * price)
+    save_entry(options.date, options.stock, options.count, options.price, converted_amount)
     logging.info(
         "Entry with date %s , stock %s, count %s , price %s successfully added.",
         options.date,
@@ -153,7 +156,7 @@ def import_data_main() -> None:
     """Main function for import data command."""
     parser = import_parser()
     (options, _) = parser.parse_args()
-    if (options.portfolio or options.entries) and options.initialize:
+    if (options.portfolio or options.entries or options.dividends) and options.initialize:
         logging.error("Using rewrite option with entries and portfolio options, no effect.")
         sys.exit(1)
     if options.initialize and options.confirmation:
@@ -178,6 +181,11 @@ def import_data_main() -> None:
         logging.info(
             f"Entries {options.entries} successfully updated to {ENTRIES_PATH}"
         )
+    if options.dividends:
+        import_data(options.dividends, DIVIDEND_PATH)
+        logging.info(
+            f"Dividends {options.dividends} successfully updated to {DIVIDEND_PATH}"
+        )
 
 
 def save_token_main() -> None:
@@ -188,6 +196,28 @@ def save_token_main() -> None:
         token_file.write(token)
     logging.info(f"Token successfully saved to {TOKEN_PATH}")
 
+def add_dividend_main() -> None:
+    """
+    Root function for the dividend argument from the command line.
+    """
+    parser = dividend_parser()
+    (options, _) = parser.parse_args()
+    if not options.stock or not options.date or not options.amount:
+        logging.error("You have to enter all needed params")
+        raise ValueError("You have to enter all needed params")
+    pair = options.stock.strip()
+    try:
+        date = validate_date(options.date)
+        amount = float(options.amount)
+    except TypeError as err:
+        raise RuntimeError("parameters have bad types, please try again") from err
+    save_dividend(date, options.stock, amount)
+    logging.info(
+        "Entry with date %s , stock %s, amount %s .",
+        options.date,
+        options.stock,
+        options.amount,
+    )
 
 def print_main_help() -> None:
     """Prints main help"""
@@ -200,6 +230,7 @@ def print_main_help() -> None:
         "import-data [opts] - imports data from your custom files\n\n"
         "export-data [opts] - exports data to your directory\n\n"
         "save-token (token) - save your token to rapidAPI\n\n"
+        "add-dividend [opts] - add dividend for current pair and date\n\n"
     )
 
 
@@ -219,6 +250,8 @@ def main() -> None:
             import_data_main()
         elif sys.argv[1] == "save-token":
             save_token_main()
+        elif sys.argv[1] == "add-dividend":
+            add_dividend_main()
         elif sys.argv[1] == "-h" or sys.argv[1] == "--help":
             print_main_help()
         else:

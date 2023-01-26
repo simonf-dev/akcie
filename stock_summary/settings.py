@@ -35,9 +35,9 @@ class SummaryDict(TypedDict):
     currency: str
 
 
-PAIR_PATH = f"{DATA_PATH}/pairs"
 ENTRIES_PATH = f"{DATA_PATH}/entries"
 PORTFOLIO_PATH = f"{DATA_PATH}/portfolio"
+DIVIDEND_PATH = f"{DATA_PATH}/dividends"
 INDEX_HTML_FILE = f"{DATA_PATH}/index.html"
 MAIN_CSS_FILE = f"{DATA_PATH}/main.css"
 TOKEN_PATH = f"{SETTINGS_PATH}/token"
@@ -47,10 +47,10 @@ try:
 except FileNotFoundError:
     API_TOKEN = ""
 
-EXCHANGE_RATE_URL = "https://exchangerate-api.p.rapidapi.com/rapid/latest/CZK"
+EXCHANGE_RATE_URL = "https://fixer-fixer-currency-v1.p.rapidapi.com"
 EXCHANGE_RATE_HEADERS = {
     "X-RapidAPI-Key": API_TOKEN,
-    "X-RapidAPI-Host": "exchangerate-api.p.rapidapi.com",
+    "X-RapidAPI-Host": "fixer-fixer-currency-v1.p.rapidapi.com",
 }
 
 STOCK_PRICE_URL = "https://yahoo-finance15.p.rapidapi.com/api/yahoo/qu/quote"
