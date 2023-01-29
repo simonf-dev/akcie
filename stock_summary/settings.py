@@ -34,6 +34,12 @@ class SummaryDict(TypedDict):
     count: float
     currency: str
 
+class Dividend(TypedDict):
+    """ THis dict is used to summarize dividends for view Jinja HTML"""
+    currency: str
+    symbol: str
+    converted_value: float
+    value: float
 
 ENTRIES_PATH = f"{DATA_PATH}/entries"
 PORTFOLIO_PATH = f"{DATA_PATH}/portfolio"

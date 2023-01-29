@@ -33,4 +33,27 @@
 
         <tbody>
     </table>
+        <table class="fl-table">
+        <thead>
+        <tr>
+            <th>Symbol</th>
+            <th>Actual price</th>
+            <th>Turning point price</th>
+            <th>Count</th>
+            <th>Cost basis</th>
+            <th>Actual basis</th>
+            <th>Percentage move</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for dividend in dividends %}
+        <tr>
+            <td>{{dividend.symbol}}</td>
+            <td>{{'%0.2f' % dividend.value|float}} {{dividend.currency}}</td>
+            <td>{{'%0.2f' % dividend.converted_value|float}} CZK</td>
+        </tr>
+        {% endfor %}
+
+        <tbody>
+    </table>
 </div>

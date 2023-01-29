@@ -24,7 +24,10 @@ from stock_summary.library import (
     prepare_portfolio_data,
     validate_date,
     rewrite_data_files,
-    save_dividend, convert_currency
+    save_dividend, convert_currency,
+    get_dividend_summary,
+    get_dividend_sum, get_pairs,
+    save_entry
 )
 from stock_summary.parsers import add_entry_parser, export_parser, import_parser, dividend_parser
 from stock_summary.settings import (
@@ -36,16 +39,6 @@ from stock_summary.settings import (
     TOKEN_PATH,
     DIVIDEND_PATH
 )
-
-
-def get_pairs() -> List[str]:
-    """Returns list of pairs."""
-    with open(ENTRIES_PATH, newline="", encoding="utf-8") as csvfile:
-        pair_lines = csv.reader(csvfile, delimiter=" ", quotechar="|")
-        next(pair_lines)
-        pairs = [pair[1].strip() for pair in pair_lines if pair]
-        logging.debug("Getting pairs %s", pairs)
-        return list(set(pairs))
 
 
 def generate_portfolio_main() -> None:
@@ -68,7 +61,7 @@ def generate_portfolio_main() -> None:
     with open(PORTFOLIO_PATH, "a", encoding="utf-8") as result_file:
         now = datetime.datetime.now()
         result_file.write(
-            f"{now.strftime('%d/%m/%y')} {curr_value} {curr_value - init_value}\n"
+            f"{now.strftime('%d/%m/%y')} {curr_value} {curr_value - init_value + get_dividend_sum()}\n"
         )
     logging.info(
         "Portfolio with cost basis %s and profit %s generated and added.",
@@ -77,15 +70,6 @@ def generate_portfolio_main() -> None:
     )
 
 
-def save_entry(date: str, stock: str, count: str, price: str, converted_amount: float) -> None:
-    """Save entries to CSV file."""
-    with open(ENTRIES_PATH, "a", newline="", encoding="utf-8") as csvfile:
-        csv_writer = csv.writer(csvfile, delimiter=" ", quotechar="|")
-        csv_writer.writerow([date, stock, count, price, converted_amount])
-    logging.debug(
-        f"Entry date: {date} stock: {stock} count: {count} "
-        f"price: {price} saved to {ENTRIES_PATH}"
-    )
 
 
 def generate_html_main() -> None:
@@ -93,6 +77,8 @@ def generate_html_main() -> None:
     Generates HTML and executes it in your browser.
     """
     summary_records = list(get_entries_summary().values())
+    dividend_summary = list(get_dividend_summary().values())
+
     portfolio_data = prepare_portfolio_data()
     plot_html = get_plot_html(portfolio_data)
     environment = jinja2.Environment()
@@ -103,7 +89,8 @@ def generate_html_main() -> None:
     ) as html_template:
         template = environment.from_string(html_template.read())
     with open(INDEX_HTML_FILE, "w", encoding="utf-8") as index_file:
-        index_file.write(template.render(plot_html=plot_html, records=summary_records))
+        index_file.write(template.render(plot_html=plot_html, records=summary_records,
+                                         dividends=dividend_summary))
     shutil.copy2(
         f"{pathlib.Path(__file__).parent.resolve()}/html_files/main.css", MAIN_CSS_FILE
     )
@@ -130,7 +117,7 @@ def add_entry_main() -> None:
         price = float(options.price)
     except TypeError as err:
         raise RuntimeError("parameters have bad types, please try again") from err
-    currency = get_pair_prices(list(get_entries_summary().keys()))[options.stock]["currency"]
+    currency = get_pair_prices(get_pairs())[options.stock]["currency"]
     converted_amount = convert_currency(date, currency, "CZK", count * price)
     save_entry(options.date, options.stock, options.count, options.price, converted_amount)
     logging.info(

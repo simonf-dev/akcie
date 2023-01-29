@@ -25,7 +25,7 @@ from stock_summary.settings import (
     STOCK_PRICE_HEADERS,
     STOCK_PRICE_URL,
     PairResponse,
-    SummaryDict, DIVIDEND_PATH,
+    SummaryDict, DIVIDEND_PATH, Dividend
 )
 
 
@@ -194,7 +194,7 @@ def export_data(directory: str) -> None:
     shutil.copy2(DIVIDEND_PATH, f"{path}/{DIVIDEND_PATH.split('/')[-1]}")
 
 def save_dividend(date: datetime.datetime, stock: str, amount: float) -> None:
-    currency = get_pair_prices(list(get_entries_summary().keys()))[stock]["currency"]
+    currency = get_pair_prices([stock])[stock]["currency"]
     converted_amount = convert_currency(date, currency, "CZK", amount)
     with open(DIVIDEND_PATH, "a", newline="", encoding="utf-8") as csvfile:
         csv_writer = csv.writer(csvfile, delimiter=" ", quotechar="|")
@@ -207,3 +207,54 @@ def save_dividend(date: datetime.datetime, stock: str, amount: float) -> None:
 def convert_currency(date:datetime.datetime, from_curr: str, to_curr: str, amount: float) -> float:
     exchange_rates = get_exchange_rates(date, to_curr)
     return amount * exchange_rates[from_curr]
+
+def get_dividend_summary() -> Dict[str, Dividend]:
+    """ Returns dividend summary"""
+    dividend_summary: Dict[str, Dividend] = {}
+    with open(DIVIDEND_PATH, newline="", encoding="utf-8") as csvfile:
+        dividends = csv.reader(csvfile, delimiter=" ", quotechar="|")
+        next(dividends)
+        for dividend in dividends:
+            if dividend[1] not in dividends:
+                dividend_summary[dividend[1]] = {
+                    "symbol": dividend[1],
+                    "value": 0,
+                    "converted_value": 0,
+                    "currency": ""
+                }
+            dividend_summary[dividend[1]]["value"] += float(dividend[2])
+            dividend_summary[dividend[1]]["converted_value"] += float(dividend[4])
+    pair_prices = get_pair_prices(list(dividend_summary.keys()))
+    for key, value in dividend_summary.items():
+        value["currency"] = pair_prices[key]["currency"]
+    return dividend_summary
+
+
+def get_dividend_sum() -> float:
+    """ Returns sum of the all dividends."""
+    with open(DIVIDEND_PATH, newline="", encoding="utf-8") as csvfile:
+        dividend_lines = csv.reader(csvfile, delimiter=" ", quotechar="|")
+        next(dividend_lines)
+        sum_value = 0
+        for dividend in dividend_lines:
+            sum_value += float(dividend[3])
+    return sum_value
+
+def get_pairs() -> List[str]:
+    """Returns list of pairs."""
+    with open(ENTRIES_PATH, newline="", encoding="utf-8") as csvfile:
+        pair_lines = csv.reader(csvfile, delimiter=" ", quotechar="|")
+        next(pair_lines)
+        pairs = [pair[1].strip() for pair in pair_lines if pair]
+        logging.debug("Getting pairs %s", pairs)
+        return list(set(pairs))
+
+def save_entry(date: str, stock: str, count: str, price: str, converted_amount: float) -> None:
+    """Save entries to CSV file."""
+    with open(ENTRIES_PATH, "a", newline="", encoding="utf-8") as csvfile:
+        csv_writer = csv.writer(csvfile, delimiter=" ", quotechar="|")
+        csv_writer.writerow([date, stock, count, price, converted_amount])
+    logging.debug(
+        f"Entry date: {date} stock: {stock} count: {count} "
+        f"price: {price} saved to {ENTRIES_PATH}"
+    )
