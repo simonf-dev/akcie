@@ -13,3 +13,7 @@ tests:
 black:
 	poetry run black stock_summary/ tests/
 .PHONY: black
+
+isort:
+	poetry run isort stock_summary/ tests/
+.PHONY: isort

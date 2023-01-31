@@ -146,7 +146,7 @@ def export_data_main() -> None:
     if not options.directory:
         logging.error("You need to pass the directory for the output.")
         sys.exit(1)
-    export_data(options.directory)
+    export_data(Path(options.directory))
 
 
 def import_data_main() -> None:
