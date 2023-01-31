@@ -26,6 +26,7 @@ pandas-stubs = "1.5.2.230105"
 types-appdirs = "1.4.3.1"
 cffi = "1.15.1"
 pytest = "^7.2.1"
+setuptools = "^67.0.0"
 
 [build-system]
 requires = ["poetry-core", "setuptools"]
