@@ -12,7 +12,6 @@ from typing import Any, Dict, List, Optional
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import pandas as pd
-import plotly.express as px
 import requests
 
 from functools import lru_cache
@@ -25,7 +24,10 @@ from stock_summary.settings import (
     STOCK_PRICE_HEADERS,
     STOCK_PRICE_URL,
     PairResponse,
-    SummaryDict, DIVIDEND_PATH, Dividend
+    SummaryDict,
+    DIVIDEND_PATH,
+    Dividend,
+    INIT_DATASETS_PATH
 )
 
 
@@ -36,14 +38,23 @@ def check_pair_responses(pairs: List[PairResponse]) -> None:
             raise ValueError(f"Entered symbol {pair['symbol']} has invalid price <=0.")
     logging.debug(f"Successfully checked responses for {pairs}")
 
+
 @lru_cache()
-def get_exchange_rates(date: Optional[datetime.datetime] = None, base_pair: str = "CZK") -> Dict[str, float]:
+def get_exchange_rates(
+    date: Optional[datetime.datetime] = None, base_pair: str = "CZK"
+) -> Dict[str, float]:
     """Returns dict with actual values for conversions between other currencies and CZK"""
-    url = f"{EXCHANGE_RATE_URL}/latest" if date is None else \
-        f"{EXCHANGE_RATE_URL}/{date.strftime('%Y-%m-%d')}"
+    url = (
+        f"{EXCHANGE_RATE_URL}/latest"
+        if date is None
+        else f"{EXCHANGE_RATE_URL}/{date.strftime('%Y-%m-%d')}"
+    )
     response = requests.request(
-        "GET", url, timeout=10, headers=EXCHANGE_RATE_HEADERS,
-        params={"base": base_pair}
+        "GET",
+        url,
+        timeout=10,
+        headers=EXCHANGE_RATE_HEADERS,
+        params={"base": base_pair},
     )
     exchange_dict = {}
     for key, value in json.loads(response.text)["rates"].items():
@@ -79,13 +90,13 @@ def validate_date(date_text: str) -> datetime.datetime:
         raise ValueError("Incorrect data format, should be DD/MM/YYYY") from err
 
 
-def get_entries_summary() -> Dict[str, SummaryDict]:
+def get_entries_summary(entries_path: pathlib.Path = ENTRIES_PATH) -> Dict[str, SummaryDict]:
     """
     Returns entries summary with keys as stock symbols and values as dicts with all important
     values (see TypedDict) in settings.
     """
     entries_dict: Dict[str, SummaryDict] = {}
-    with open(ENTRIES_PATH, newline="", encoding="utf-8") as csvfile:
+    with open(entries_path, newline="", encoding="utf-8") as csvfile:
         entries = csv.reader(csvfile, delimiter=" ", quotechar="|")
         next(entries)
         for entry in entries:
@@ -126,7 +137,9 @@ def get_plot_html(dataset: Any) -> Any:
 
     # Add traces
     fig.add_trace(
-        go.Scatter(x=dataset["DATE"], y=dataset["TOTAL_PRICE"], name="AKTUÁLNÍ HODNOTA"),
+        go.Scatter(
+            x=dataset["DATE"], y=dataset["TOTAL_PRICE"], name="AKTUÁLNÍ HODNOTA"
+        ),
         secondary_y=False,
     )
 
@@ -136,9 +149,7 @@ def get_plot_html(dataset: Any) -> Any:
     )
 
     # Add figure title
-    fig.update_layout(
-        title_text="Přehled portfolia v čase"
-    )
+    fig.update_layout(title_text="Přehled portfolia v čase")
 
     # Set x-axis title
     fig.update_xaxes(title_text="Čas")
@@ -156,74 +167,81 @@ def rewrite_data_files(rewrite: bool = False) -> None:
     os.makedirs(DATA_PATH, exist_ok=True)
     if rewrite or not os.path.exists(ENTRIES_PATH):
         shutil.copy2(
-            f"{pathlib.Path(__file__).parent.resolve()}/init_datasets/entries",
+            f"{INIT_DATASETS_PATH.joinpath('entries')}",
             ENTRIES_PATH,
         )
         logging.debug(f"Created init entries file {ENTRIES_PATH}")
     if rewrite or not os.path.exists(PORTFOLIO_PATH):
         shutil.copy2(
-            f"{pathlib.Path(__file__).parent.resolve()}/init_datasets/portfolio",
+            f"{INIT_DATASETS_PATH.joinpath('portfolio')}",
             PORTFOLIO_PATH,
         )
         logging.debug(f"Created init portfolio file {ENTRIES_PATH}")
     if rewrite or not os.path.exists(DIVIDEND_PATH):
         shutil.copy2(
-            f"{pathlib.Path(__file__).parent.resolve()}/init_datasets/dividends",
+            f"{INIT_DATASETS_PATH.joinpath('dividends')}",
             DIVIDEND_PATH,
         )
         logging.debug(f"Created init portfolio file {DIVIDEND_PATH}")
 
 
-def import_data(from_file: str, to_file: str) -> None:
+def import_data(from_file: pathlib.Path, to_file: pathlib.Path) -> None:
     """
     Imports data from entry file to target file. If target file already exists, then
     asks user for confirmation
     """
-    shutil.copy2(from_file, to_file)
-    logging.debug(f"Successfully moved data from {from_file} to {to_file}")
+    shutil.copy2(from_file.resolve(), to_file.resolve())
+    logging.debug(f"Successfully moved data from {from_file.resolve()} to {to_file.resolve()}")
 
 
-def export_data(directory: str) -> None:
+def export_data(directory: pathlib.Path) -> None:
     """
     Exports all data files to target directory, creates recursively, if doesn't exist.
     """
-    path = Path(directory)
+    path = directory.resolve()
     os.makedirs(path, exist_ok=True)
-    shutil.copy2(ENTRIES_PATH, f"{path}/{ENTRIES_PATH.split('/')[-1]}")
-    shutil.copy2(PORTFOLIO_PATH, f"{path}/{PORTFOLIO_PATH.split('/')[-1]}")
-    shutil.copy2(DIVIDEND_PATH, f"{path}/{DIVIDEND_PATH.split('/')[-1]}")
+    shutil.copy2(ENTRIES_PATH, f"{path.joinpath(ENTRIES_PATH.parts[-1]).resolve()}")
+    shutil.copy2(PORTFOLIO_PATH, f"{path.joinpath(PORTFOLIO_PATH.parts[-1]).resolve()}")
+    shutil.copy2(DIVIDEND_PATH, f"{path.joinpath(DIVIDEND_PATH.parts[-1]).resolve()}")
+
 
 def save_dividend(date: datetime.datetime, stock: str, amount: float) -> None:
     currency = get_pair_prices([stock])[stock]["currency"]
     converted_amount = convert_currency(date, currency, "CZK", amount)
     with open(DIVIDEND_PATH, "a", newline="", encoding="utf-8") as csvfile:
         csv_writer = csv.writer(csvfile, delimiter=" ", quotechar="|")
-        csv_writer.writerow([date.strftime("%d/%m/%Y"), stock, amount, converted_amount])
+        csv_writer.writerow(
+            [date.strftime("%d/%m/%Y"), stock, amount, converted_amount]
+        )
     logging.debug(
         f"Dividend date: {date} stock: {stock} amount: {amount} "
         f"converted_amount: {converted_amount} saved to {DIVIDEND_PATH}"
     )
 
-def convert_currency(date:datetime.datetime, from_curr: str, to_curr: str, amount: float) -> float:
+
+def convert_currency(
+    date: datetime.datetime, from_curr: str, to_curr: str, amount: float
+) -> float:
     exchange_rates = get_exchange_rates(date, to_curr)
     return amount * exchange_rates[from_curr]
 
+
 def get_dividend_summary() -> Dict[str, Dividend]:
-    """ Returns dividend summary"""
+    """Returns dividend summary"""
     dividend_summary: Dict[str, Dividend] = {}
     with open(DIVIDEND_PATH, newline="", encoding="utf-8") as csvfile:
         dividends = csv.reader(csvfile, delimiter=" ", quotechar="|")
         next(dividends)
         for dividend in dividends:
-            if dividend[1] not in dividends:
+            if dividend[1] not in dividend_summary:
                 dividend_summary[dividend[1]] = {
                     "symbol": dividend[1],
                     "value": 0,
                     "converted_value": 0,
-                    "currency": ""
+                    "currency": "",
                 }
             dividend_summary[dividend[1]]["value"] += float(dividend[2])
-            dividend_summary[dividend[1]]["converted_value"] += float(dividend[4])
+            dividend_summary[dividend[1]]["converted_value"] += float(dividend[3])
     pair_prices = get_pair_prices(list(dividend_summary.keys()))
     for key, value in dividend_summary.items():
         value["currency"] = pair_prices[key]["currency"]
@@ -231,14 +249,15 @@ def get_dividend_summary() -> Dict[str, Dividend]:
 
 
 def get_dividend_sum() -> float:
-    """ Returns sum of the all dividends."""
+    """Returns sum of the all dividends."""
     with open(DIVIDEND_PATH, newline="", encoding="utf-8") as csvfile:
         dividend_lines = csv.reader(csvfile, delimiter=" ", quotechar="|")
         next(dividend_lines)
-        sum_value = 0
+        sum_value = 0.0
         for dividend in dividend_lines:
             sum_value += float(dividend[3])
     return sum_value
+
 
 def get_pairs() -> List[str]:
     """Returns list of pairs."""
@@ -249,7 +268,10 @@ def get_pairs() -> List[str]:
         logging.debug("Getting pairs %s", pairs)
         return list(set(pairs))
 
-def save_entry(date: str, stock: str, count: str, price: str, converted_amount: float) -> None:
+
+def save_entry(
+    date: str, stock: str, count: str, price: str, converted_amount: float
+) -> None:
     """Save entries to CSV file."""
     with open(ENTRIES_PATH, "a", newline="", encoding="utf-8") as csvfile:
         csv_writer = csv.writer(csvfile, delimiter=" ", quotechar="|")

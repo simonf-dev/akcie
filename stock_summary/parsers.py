@@ -43,7 +43,7 @@ def import_parser() -> optparse.OptionParser:
         dest="confirmation",
         action="store_true",
         help="Flag to automatically confirm all actions as overwrite of your current datafiles",
-        default=False
+        default=False,
     )
 
     parser.add_option(
@@ -51,8 +51,8 @@ def import_parser() -> optparse.OptionParser:
         dest="initialize",
         action="store_true",
         help="Flag for initialization of basic data false, has to be used with -y, or it has no"
-             "effect.",
-        default=False
+        "effect.",
+        default=False,
     )
 
     return parser
@@ -71,6 +71,7 @@ def export_parser() -> optparse.OptionParser:
 
     return parser
 
+
 def dividend_parser() -> optparse.OptionParser:
     """Parser for dividend command."""
     parser = optparse.OptionParser(
@@ -80,8 +81,15 @@ def dividend_parser() -> optparse.OptionParser:
         "-s", "--stock", dest="stock", help="Symbol of the stock for dividend."
     )
     parser.add_option(
-        "-d", "--date", dest="date", help="Date of the dividend entry, please add as DD/MM/YYYY"
+        "-d",
+        "--date",
+        dest="date",
+        help="Date of the dividend entry, please add as DD/MM/YYYY",
     )
-    parser.add_option("-a", "--amount", dest="amount", help="Amount of the earned money "
-                                                            "(in stock currency)")
+    parser.add_option(
+        "-a",
+        "--amount",
+        dest="amount",
+        help="Amount of the earned money " "(in stock currency)",
+    )
     return parser

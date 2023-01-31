@@ -3,13 +3,11 @@ import csv
 import datetime
 import logging
 import os
-import pathlib
 import platform
 import shutil
 import sys
 import webbrowser
-from typing import List
-
+from pathlib import Path
 import jinja2
 
 logging_level = os.environ.get("DEBUG_LEVEL")
@@ -24,12 +22,19 @@ from stock_summary.library import (
     prepare_portfolio_data,
     validate_date,
     rewrite_data_files,
-    save_dividend, convert_currency,
+    save_dividend,
+    convert_currency,
     get_dividend_summary,
-    get_dividend_sum, get_pairs,
-    save_entry
+    get_dividend_sum,
+    get_pairs,
+    save_entry,
 )
-from stock_summary.parsers import add_entry_parser, export_parser, import_parser, dividend_parser
+from stock_summary.parsers import (
+    add_entry_parser,
+    export_parser,
+    import_parser,
+    dividend_parser,
+)
 from stock_summary.settings import (
     ENTRIES_PATH,
     INDEX_HTML_FILE,
@@ -37,7 +42,7 @@ from stock_summary.settings import (
     PORTFOLIO_PATH,
     SETTINGS_PATH,
     TOKEN_PATH,
-    DIVIDEND_PATH
+    DIVIDEND_PATH,
 )
 
 
@@ -70,8 +75,6 @@ def generate_portfolio_main() -> None:
     )
 
 
-
-
 def generate_html_main() -> None:
     """
     Generates HTML and executes it in your browser.
@@ -83,16 +86,19 @@ def generate_html_main() -> None:
     plot_html = get_plot_html(portfolio_data)
     environment = jinja2.Environment()
     with open(
-        f"{pathlib.Path(__file__).parent.resolve()}/html_files/jinja.html",
+        Path(__file__).parent.resolve() / "html_files" / "jinja.html",
         "r",
         encoding="utf-8",
     ) as html_template:
         template = environment.from_string(html_template.read())
     with open(INDEX_HTML_FILE, "w", encoding="utf-8") as index_file:
-        index_file.write(template.render(plot_html=plot_html, records=summary_records,
-                                         dividends=dividend_summary))
+        index_file.write(
+            template.render(
+                plot_html=plot_html, records=summary_records, dividends=dividend_summary
+            )
+        )
     shutil.copy2(
-        f"{pathlib.Path(__file__).parent.resolve()}/html_files/main.css", MAIN_CSS_FILE
+        Path(__file__).parent.resolve() / "html_files" / "main.css", MAIN_CSS_FILE
     )
     logging.info(f"Index html file successfully saved to {INDEX_HTML_FILE}")
     prepend_str = ""
@@ -119,7 +125,9 @@ def add_entry_main() -> None:
         raise RuntimeError("parameters have bad types, please try again") from err
     currency = get_pair_prices(get_pairs())[options.stock]["currency"]
     converted_amount = convert_currency(date, currency, "CZK", count * price)
-    save_entry(options.date, options.stock, options.count, options.price, converted_amount)
+    save_entry(
+        options.date, options.stock, options.count, options.price, converted_amount
+    )
     logging.info(
         "Entry with date %s , stock %s, count %s , price %s successfully added.",
         options.date,
@@ -143,8 +151,12 @@ def import_data_main() -> None:
     """Main function for import data command."""
     parser = import_parser()
     (options, _) = parser.parse_args()
-    if (options.portfolio or options.entries or options.dividends) and options.initialize:
-        logging.error("Using rewrite option with entries and portfolio options, no effect.")
+    if (
+        options.portfolio or options.entries or options.dividends
+    ) and options.initialize:
+        logging.error(
+            "Using rewrite option with entries and portfolio options, no effect."
+        )
         sys.exit(1)
     if options.initialize and options.confirmation:
         rewrite_data_files(rewrite=True)
@@ -159,17 +171,17 @@ def import_data_main() -> None:
             logging.error("Action canceled, ending without any action.")
             sys.exit(1)
     if options.portfolio:
-        import_data(options.portfolio, PORTFOLIO_PATH)
+        import_data(Path(options.portfolio), PORTFOLIO_PATH)
         logging.info(
             f"Portfolio {options.portfolio} successfully updated to {PORTFOLIO_PATH}"
         )
     if options.entries:
-        import_data(options.entries, ENTRIES_PATH)
+        import_data(Path(options.entries), ENTRIES_PATH)
         logging.info(
             f"Entries {options.entries} successfully updated to {ENTRIES_PATH}"
         )
     if options.dividends:
-        import_data(options.dividends, DIVIDEND_PATH)
+        import_data(Path(options.dividends), DIVIDEND_PATH)
         logging.info(
             f"Dividends {options.dividends} successfully updated to {DIVIDEND_PATH}"
         )
@@ -182,6 +194,7 @@ def save_token_main() -> None:
     with open(TOKEN_PATH, "w", encoding="utf-8") as token_file:
         token_file.write(token)
     logging.info(f"Token successfully saved to {TOKEN_PATH}")
+
 
 def add_dividend_main() -> None:
     """
@@ -205,6 +218,7 @@ def add_dividend_main() -> None:
         options.stock,
         options.amount,
     )
+
 
 def print_main_help() -> None:
     """Prints main help"""

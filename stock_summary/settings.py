@@ -1,13 +1,14 @@
 """ file with settings """
 import logging
+import appdirs
+import pathlib
 from enum import Enum
 from typing import TypedDict
 
-import appdirs
 
-DATA_PATH = appdirs.user_data_dir("stock_summary")
-SETTINGS_PATH = appdirs.user_config_dir("stock_summary")
-
+DATA_PATH = pathlib.Path(appdirs.user_data_dir("stock_summary")).resolve()
+SETTINGS_PATH = pathlib.Path(appdirs.user_config_dir("stock_summary")).resolve()
+INIT_DATASETS_PATH = pathlib.Path(__file__).parent.resolve().joinpath("init_datasets").resolve()
 
 class LoggingSettings(Enum):
     """Enum which saves settings for logging"""
@@ -34,19 +35,22 @@ class SummaryDict(TypedDict):
     count: float
     currency: str
 
+
 class Dividend(TypedDict):
-    """ THis dict is used to summarize dividends for view Jinja HTML"""
+    """THis dict is used to summarize dividends for view Jinja HTML"""
+
     currency: str
     symbol: str
     converted_value: float
     value: float
 
-ENTRIES_PATH = f"{DATA_PATH}/entries"
-PORTFOLIO_PATH = f"{DATA_PATH}/portfolio"
-DIVIDEND_PATH = f"{DATA_PATH}/dividends"
-INDEX_HTML_FILE = f"{DATA_PATH}/index.html"
-MAIN_CSS_FILE = f"{DATA_PATH}/main.css"
-TOKEN_PATH = f"{SETTINGS_PATH}/token"
+
+ENTRIES_PATH = DATA_PATH.joinpath('entries').resolve()
+PORTFOLIO_PATH = DATA_PATH.joinpath('portfolio').resolve()
+DIVIDEND_PATH = DATA_PATH.joinpath('dividends').resolve()
+INDEX_HTML_FILE = DATA_PATH.joinpath('index.html').resolve()
+MAIN_CSS_FILE = DATA_PATH.joinpath('main.css').resolve()
+TOKEN_PATH = SETTINGS_PATH.joinpath('token').resolve()
 try:
     with open(TOKEN_PATH, "r", encoding="utf-8") as token_file:
         API_TOKEN = token_file.read().strip()

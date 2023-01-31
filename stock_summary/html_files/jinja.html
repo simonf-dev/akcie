@@ -25,24 +25,26 @@
             <td>{{record.count}}</td>
             <td>{{'%0.2f' % record.cost_basis|float}} CZK</td>
             <td>{{'%0.2f' % record.actual_basis|float}} CZK</td>
+            {% if record.cost_basis|float > 0.0 %}
             <td>{{'%0.2f' % (((record.actual_basis / record.cost_basis) - 1) * 100)|float}} %</td>
-
+            {% else %}
+            <td> N/A </td>
+            {% endif %}
 
         </tr>
         {% endfor %}
 
         <tbody>
     </table>
-        <table class="fl-table">
+</div>
+<h2>Přehled dividend</h2>
+<div class="table-wrapper">
+    <table class="fl-table">
         <thead>
         <tr>
             <th>Symbol</th>
-            <th>Actual price</th>
-            <th>Turning point price</th>
-            <th>Count</th>
-            <th>Cost basis</th>
-            <th>Actual basis</th>
-            <th>Percentage move</th>
+            <th>Value</th>
+            <th>Converted value</th>
         </tr>
         </thead>
         <tbody>
