@@ -59,6 +59,7 @@ jobs:
       - name: Package installation
         run: |
           ls ./dist
+          pip install poetry
           pip install dist/stock_summary*.whl
       - name: Sanity tests
         run: |
