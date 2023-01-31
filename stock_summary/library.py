@@ -248,9 +248,9 @@ def get_dividend_summary() -> Dict[str, Dividend]:
     return dividend_summary
 
 
-def get_dividend_sum() -> float:
+def get_dividend_sum(dividend_path: pathlib.Path = DIVIDEND_PATH) -> float:
     """Returns sum of the all dividends."""
-    with open(DIVIDEND_PATH, newline="", encoding="utf-8") as csvfile:
+    with open(dividend_path, newline="", encoding="utf-8") as csvfile:
         dividend_lines = csv.reader(csvfile, delimiter=" ", quotechar="|")
         next(dividend_lines)
         sum_value = 0.0
@@ -259,9 +259,9 @@ def get_dividend_sum() -> float:
     return sum_value
 
 
-def get_pairs() -> List[str]:
+def get_pairs(entries_path: pathlib.Path = ENTRIES_PATH) -> List[str]:
     """Returns list of pairs."""
-    with open(ENTRIES_PATH, newline="", encoding="utf-8") as csvfile:
+    with open(entries_path, newline="", encoding="utf-8") as csvfile:
         pair_lines = csv.reader(csvfile, delimiter=" ", quotechar="|")
         next(pair_lines)
         pairs = [pair[1].strip() for pair in pair_lines if pair]

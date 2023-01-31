@@ -1,8 +1,14 @@
+import socket
+from typing import Any
+def guard(*args: Any, **kwargs: Any) -> None:
+    raise Exception("I told you not to use the Internet!")
+socket.socket = guard # type: ignore
 from unittest.mock import patch
-from stock_summary.library import get_entries_summary
+from stock_summary.library import get_entries_summary, get_pairs, get_dividend_sum
+from stock_summary.settings import INIT_DATASETS_PATH
 from pathlib import Path
+
 TESTING_DATASETS_PATH = Path(__file__).parent.resolve() / "testing_data"
-# zamyslet se jak preharcodovat value na jednotlive data files, bud jen pro testy, nebo i pro uzivatele
 def test_entries_summary() -> None:
     # namockovat funkce pro exchange a pairs
     # vypocitat, kolik by mely dat summary funkce, zkontrolovat
@@ -48,10 +54,17 @@ def test_html_output() -> None:
     pass
 
 def test_dividend_sum() -> None:
-    #otestovat sum dividend
-    pass
+    """ Testing get_dividend_sum function"""
+    dividend_sum = get_dividend_sum(dividend_path=TESTING_DATASETS_PATH / "testing_data_A" / "dividends")
+    assert dividend_sum == 192
+    dividend_sum = get_dividend_sum(dividend_path=INIT_DATASETS_PATH / "dividends")
+    assert dividend_sum == 0
 
 def test_get_pairs() -> None:
-    # vyzkouset get_pairs
-    pass
+    """ Testing get_pairs function"""
+    pairs = get_pairs(entries_path=TESTING_DATASETS_PATH / "testing_data_A" / "entries")
+    assert len(pairs) == len(set(pairs))
+    assert len(pairs) == 2
+    pairs = get_pairs(entries_path=INIT_DATASETS_PATH / "entries")
+    assert len(pairs) == 0
 
