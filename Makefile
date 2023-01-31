@@ -17,3 +17,7 @@ black:
 isort:
 	poetry run isort stock_summary/ tests/
 .PHONY: isort
+
+build:
+	poetry build
+.PHONY: build
