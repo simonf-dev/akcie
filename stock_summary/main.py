@@ -8,41 +8,42 @@ import shutil
 import sys
 import webbrowser
 from pathlib import Path
+
 import jinja2
 
 logging_level = os.environ.get("DEBUG_LEVEL")
 logging.basicConfig(level=logging_level if logging_level else "INFO")
 from stock_summary.library import (
+    convert_currency,
     export_data,
+    get_dividend_sum,
+    get_dividend_summary,
     get_entries_summary,
     get_exchange_rates,
     get_pair_prices,
+    get_pairs,
     get_plot_html,
     import_data,
     prepare_portfolio_data,
-    validate_date,
     rewrite_data_files,
     save_dividend,
-    convert_currency,
-    get_dividend_summary,
-    get_dividend_sum,
-    get_pairs,
     save_entry,
+    validate_date,
 )
 from stock_summary.parsers import (
     add_entry_parser,
+    dividend_parser,
     export_parser,
     import_parser,
-    dividend_parser,
 )
 from stock_summary.settings import (
+    DIVIDEND_PATH,
     ENTRIES_PATH,
     INDEX_HTML_FILE,
     MAIN_CSS_FILE,
     PORTFOLIO_PATH,
     SETTINGS_PATH,
     TOKEN_PATH,
-    DIVIDEND_PATH,
 )
 
 
@@ -66,7 +67,8 @@ def generate_portfolio_main() -> None:
     with open(PORTFOLIO_PATH, "a", encoding="utf-8") as result_file:
         now = datetime.datetime.now()
         result_file.write(
-            f"{now.strftime('%d/%m/%y')} {curr_value} {curr_value - init_value + get_dividend_sum()}\n"
+            f"{now.strftime('%d/%m/%y')} {curr_value} "
+            f"{curr_value - init_value + get_dividend_sum()}\n"
         )
     logging.info(
         "Portfolio with cost basis %s and profit %s generated and added.",
@@ -126,7 +128,7 @@ def add_entry_main() -> None:
     currency = get_pair_prices(get_pairs())[options.stock]["currency"]
     converted_amount = convert_currency(date, currency, "CZK", count * price)
     save_entry(
-        options.date, options.stock, options.count, options.price, converted_amount
+        options.date, pair, options.count, options.price, converted_amount
     )
     logging.info(
         "Entry with date %s , stock %s, count %s , price %s successfully added.",
@@ -211,7 +213,7 @@ def add_dividend_main() -> None:
         amount = float(options.amount)
     except TypeError as err:
         raise RuntimeError("parameters have bad types, please try again") from err
-    save_dividend(date, options.stock, amount)
+    save_dividend(date, pair, amount)
     logging.info(
         "Entry with date %s , stock %s, amount %s .",
         options.date,

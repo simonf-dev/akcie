@@ -1,14 +1,17 @@
 """ file with settings """
 import logging
-import appdirs
 import pathlib
 from enum import Enum
 from typing import TypedDict
 
+import appdirs
 
 DATA_PATH = pathlib.Path(appdirs.user_data_dir("stock_summary")).resolve()
 SETTINGS_PATH = pathlib.Path(appdirs.user_config_dir("stock_summary")).resolve()
-INIT_DATASETS_PATH = pathlib.Path(__file__).parent.resolve().joinpath("init_datasets").resolve()
+INIT_DATASETS_PATH = (
+    pathlib.Path(__file__).parent.resolve().joinpath("init_datasets").resolve()
+)
+
 
 class LoggingSettings(Enum):
     """Enum which saves settings for logging"""
@@ -45,12 +48,12 @@ class Dividend(TypedDict):
     value: float
 
 
-ENTRIES_PATH = DATA_PATH.joinpath('entries').resolve()
-PORTFOLIO_PATH = DATA_PATH.joinpath('portfolio').resolve()
-DIVIDEND_PATH = DATA_PATH.joinpath('dividends').resolve()
-INDEX_HTML_FILE = DATA_PATH.joinpath('index.html').resolve()
-MAIN_CSS_FILE = DATA_PATH.joinpath('main.css').resolve()
-TOKEN_PATH = SETTINGS_PATH.joinpath('token').resolve()
+ENTRIES_PATH = DATA_PATH.joinpath("entries").resolve()
+PORTFOLIO_PATH = DATA_PATH.joinpath("portfolio").resolve()
+DIVIDEND_PATH = DATA_PATH.joinpath("dividends").resolve()
+INDEX_HTML_FILE = DATA_PATH.joinpath("index.html").resolve()
+MAIN_CSS_FILE = DATA_PATH.joinpath("main.css").resolve()
+TOKEN_PATH = SETTINGS_PATH.joinpath("token").resolve()
 try:
     with open(TOKEN_PATH, "r", encoding="utf-8") as token_file:
         API_TOKEN = token_file.read().strip()

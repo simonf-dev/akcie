@@ -7,27 +7,28 @@ import os
 import pathlib
 import shutil
 import sys
+from functools import lru_cache
 from pathlib import Path
 from typing import Any, Dict, List, Optional
-import plotly.graph_objects as go
-from plotly.subplots import make_subplots
-import pandas as pd
-import requests
 
-from functools import lru_cache
+import pandas as pd
+import plotly.graph_objects as go
+import requests
+from plotly.subplots import make_subplots
+
 from stock_summary.settings import (
     DATA_PATH,
+    DIVIDEND_PATH,
     ENTRIES_PATH,
     EXCHANGE_RATE_HEADERS,
     EXCHANGE_RATE_URL,
+    INIT_DATASETS_PATH,
     PORTFOLIO_PATH,
     STOCK_PRICE_HEADERS,
     STOCK_PRICE_URL,
+    Dividend,
     PairResponse,
     SummaryDict,
-    DIVIDEND_PATH,
-    Dividend,
-    INIT_DATASETS_PATH
 )
 
 
@@ -90,7 +91,9 @@ def validate_date(date_text: str) -> datetime.datetime:
         raise ValueError("Incorrect data format, should be DD/MM/YYYY") from err
 
 
-def get_entries_summary(entries_path: pathlib.Path = ENTRIES_PATH) -> Dict[str, SummaryDict]:
+def get_entries_summary(
+    entries_path: pathlib.Path = ENTRIES_PATH,
+) -> Dict[str, SummaryDict]:
     """
     Returns entries summary with keys as stock symbols and values as dicts with all important
     values (see TypedDict) in settings.
@@ -191,7 +194,9 @@ def import_data(from_file: pathlib.Path, to_file: pathlib.Path) -> None:
     asks user for confirmation
     """
     shutil.copy2(from_file.resolve(), to_file.resolve())
-    logging.debug(f"Successfully moved data from {from_file.resolve()} to {to_file.resolve()}")
+    logging.debug(
+        f"Successfully moved data from {from_file.resolve()} to {to_file.resolve()}"
+    )
 
 
 def export_data(directory: pathlib.Path) -> None:
@@ -206,6 +211,7 @@ def export_data(directory: pathlib.Path) -> None:
 
 
 def save_dividend(date: datetime.datetime, stock: str, amount: float) -> None:
+    """ Saves dividend into the file"""
     currency = get_pair_prices([stock])[stock]["currency"]
     converted_amount = convert_currency(date, currency, "CZK", amount)
     with open(DIVIDEND_PATH, "a", newline="", encoding="utf-8") as csvfile:
@@ -222,6 +228,7 @@ def save_dividend(date: datetime.datetime, stock: str, amount: float) -> None:
 def convert_currency(
     date: datetime.datetime, from_curr: str, to_curr: str, amount: float
 ) -> float:
+    """ Convert currency by rate from the given date"""
     exchange_rates = get_exchange_rates(date, to_curr)
     return amount * exchange_rates[from_curr]
 
