@@ -11,7 +11,7 @@ runs:
   - name: Python checks
     uses: actions/setup-python@v3
     with:
-        python-version: ${{ version }}
+        python-version: ${{ inputs.version }}
   - name: Python environment setup
     shell: "bash"
     run: |
