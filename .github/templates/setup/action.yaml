@@ -6,6 +6,7 @@ runs:
   using: "composite"
   # Defining the action steps(Just one step to be simple)
   steps:
+  - uses: actions/checkout@v3
   - name: Python checks
     uses: actions/setup-python@v3
     with:
