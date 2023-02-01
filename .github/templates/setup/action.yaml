@@ -1,6 +1,6 @@
 name: environment-setup
 inputs:
-  version:
+  python-version:
     required: true
 
 runs:
@@ -10,7 +10,7 @@ runs:
   - name: Python checks
     uses: actions/setup-python@v3
     with:
-        python-version: ${{ inputs.version }}
+        python-version: ${{ inputs.python-version }}
   - name: Python environment setup
     shell: "bash"
     run: |
