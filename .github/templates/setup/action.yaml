@@ -3,6 +3,7 @@ inputs:
   python-version:
     required: true
 runs:
+  using: "composite"
   # Defining the action steps(Just one step to be simple)
   steps:
   - uses: actions/checkout@v3
@@ -11,6 +12,7 @@ runs:
     with:
         python-version: ${{ python-version }}
   - name: Python environment setup
+    shell:
     run: |
       python -m pip install --upgrade pip
       pip install poetry
