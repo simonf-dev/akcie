@@ -10,9 +10,8 @@ runs:
   - name: Python checks
     uses: actions/setup-python@v3
     with:
-        python-version: ${{ python-version }}
+        version: ${{ python-version }}
   - name: Python environment setup
-    shell:
     run: |
       python -m pip install --upgrade pip
       pip install poetry
