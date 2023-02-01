@@ -2,11 +2,13 @@ import socket
 from typing import Any
 
 
-def guard(*args: Any, **kwargs: Any) -> None:
-    raise Exception("I told you not to use the Internet!")
+class block_network(socket.socket):
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        raise Exception("Network call blocked")
+
+socket.socket = block_network # type: ignore
 
 
-socket.socket = guard  # type: ignore
 from pathlib import Path
 from unittest.mock import patch
 

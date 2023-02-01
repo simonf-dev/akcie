@@ -19,6 +19,7 @@
         <tbody>
         {% for record in records %}
         <tr>
+            {% if record.count|float > 0.0 %}
             <td>{{record.symbol}}</td>
             <td>{{'%0.2f' % record.actual_price|float}} {{record.currency}}</td>
             <td>{{'%0.2f' % (record.actual_price / (record.actual_basis / record.cost_basis))|float}} {{record.currency}}</td>
@@ -29,6 +30,7 @@
             <td>{{'%0.2f' % (((record.actual_basis / record.cost_basis) - 1) * 100)|float}} %</td>
             {% else %}
             <td> N/A </td>
+            {% endif %}
             {% endif %}
 
         </tr>

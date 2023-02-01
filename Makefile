@@ -2,9 +2,9 @@ pylint-check:
 	poetry run pylint stock_summary tests/
 .PHONY: pylint-check
 
-mypy-check:
+type-check:
 	poetry run mypy --strict stock_summary/ tests/
-.PHONY: mypy-check
+.PHONY: type-check
 
 tests:
 	poetry run pytest tests/
