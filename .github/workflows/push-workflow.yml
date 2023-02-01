@@ -6,7 +6,8 @@ name: Deploy
 on:
   workflow_run:
     workflows: ["Basic workflow"]
-    branches: [ publish-branch ]
+    push:
+      branches: [ publish-branch ]
     types:
       - completed
 
