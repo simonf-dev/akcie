@@ -1,0 +1,17 @@
+name: environment-setup
+inputs:
+  python-version:
+    required: true
+runs:
+  # Defining the action steps(Just one step to be simple)
+  steps:
+  - uses: actions/checkout@v3
+  - name: Python checks
+    uses: actions/setup-python@v3
+    with:
+        python-version: ${{ python-version }}
+  - name: Python environment setup
+    run: |
+      python -m pip install --upgrade pip
+      pip install poetry
+      poetry install
