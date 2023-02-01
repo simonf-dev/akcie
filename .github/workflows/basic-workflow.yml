@@ -25,7 +25,7 @@ jobs:
         poetry build
     - name: Mypy checks
       run: |
-        poetry run mypy stock_summary/
+        poetry runs mypy stock_summary/
     - name: Pylint checks
       run: |
         poetry run pylint stock_summary/
