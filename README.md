@@ -12,8 +12,11 @@ pip3 install stock_summary_tool
 ```
 3. Generate and save your token:
    1. Register or log in to the page.
-   2. Go to https://rapidapi.com/sparior/api/yahoo-finance15/ and obtain your API key.
-   3. Save your key for the project:
+   2. Go to https://rapidapi.com/ and register.
+   3. Subscribe to these APIs and obtain your API key:
+      1. https://rapidapi.com/sparior/api/yahoo-finance15
+      2. https://rapidapi.com/fixer/api/fixer-currency
+   4. Save your key for the project:
    ```
    stock_summary_tool save-token <YOUR_TOKEN>
    ```
@@ -39,21 +42,44 @@ pip3 install stock_summary_tool
    ```
    stock_summary_tool import-data -y --rewrite
    ```
-2. Add your entries (example) - stock symbol, date, count of stocks, price:
+2. Add your entries (example) - stock symbol, date, count of stocks, price (sell entries are also supported, just add '-' sign before count):
    ```
    stock_summary_tool add-entry -s BOTZ.MI -d 12/01/2023 -c 20 -p 30
    ```
-3. After you add your entries, generate actual portfolio and HTML:
+3. You can enter also your dividends (amount is in original currency):
+   ```
+   stock_summary_tool add-dividend -s BOTZ.MI -d 12/01/2023 -a 10 
+   ```
+4. After you add your entries and dividends, generate actual portfolio and HTML:
    ```
    stock_summary_tool generate-portfolio
    stock_summary_tool generate-html
    ```
-4. You can also export your data and share them across multiple systems (by importing them again):
+5. You can also export your data and share them across multiple systems (by importing them again):
    ```
    stock_summary_tool export-data -d <DIRECTORY_FOR_EXPORT>
    ```
 
+### HTML tutorial
 
+*You can open example summary stock_summary/demo_datasets/index.html Right now, there is supported only czech language and CZK currency is taken as base.*
 
+You can see plot with your actual investments in stocks, and also your profit (generated from portfolio file). Below you can see your actual holdings and 
+statistics about them. Only actual holdings with >0 count are shown. The last table is for dividends.
 
+### Rules about generating portfolio and balance
+1. Entries are converted to the base currency with conversion rate for the execution day.
+2. Dividends are converted to the base currency with conversion rate for the execution day.
+3. Value of your portfolio for the current day is counted as sum of your holdings for the day. (converted to base currency)
+4. Profit is comparison of your invested amount with dividends and your actual holdings. If you sell some stocks, profit stays same, only value of your portfolio goes down. Same with buy entries (portfolio up, profit stays same). If you get some dividends, it grows your profit by that amount.
+5. ONCE AGAIN: All amounts are automatically converted to base currency by exchange rate of the execution day. It doesn't matter if you convert them or not. Right now it's out of scope of the tool.
+
+### Plans for the future
+1. Adding option for fees to the operations.
+2. Supporting more languages and base currencies.
+3. Adding backward possibility to generate portfolio and no need to generate it manually anymore (blocked by higher number of API calls and subscription)
+4. Support for cloud storage (easy setup and option to use tool across more systems without manual import/export)
+5. Adding option to track other investments except stocks/cryptocurrencies/dividends.
+
+Be free to open issue or ask me, if you want to know something or you want to help with the project.
 
