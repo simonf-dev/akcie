@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "stock_summary_tool"
-version = "0.1.0"
+version = "0.1.1"
 description = "Tool for tracking of your investments and your actual portfolio"
 authors = ["Simon Foucek <foucek.simon@gmail.com>"]
 readme = "README.md"
