@@ -290,7 +290,7 @@ def save_entry(
     )
 
 
-def set_env_variables(
+def save_variables_to_file(
     env_vars: Mapping[str, str],
     env_path: pathlib.Path = ENV_VARIABLES,
 ) -> None:

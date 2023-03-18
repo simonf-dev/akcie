@@ -12,7 +12,7 @@ from typing import Dict
 
 import jinja2
 
-from stock_summary.clouds.logic import sync_files_up, sync_files_down
+from stock_summary.clouds.logic import sync_files_down, sync_files_up
 
 logging_level = os.environ.get("DEBUG_LEVEL")
 logging.basicConfig(level=logging_level if logging_level else "INFO")
@@ -31,7 +31,7 @@ from stock_summary.library import (
     rewrite_data_files,
     save_dividend,
     save_entry,
-    set_env_variables,
+    save_variables_to_file,
     validate_date,
 )
 from stock_summary.parsers import (
@@ -77,7 +77,7 @@ def generate_portfolio_main() -> None:
             f"{now.strftime('%d/%m/%y')} {curr_value} "
             f"{curr_value - init_value + get_dividend_sum()}\n"
         )
-    sync_files_up(paths={PORTFOLIO_PATH: PORTFOLIO_PATH.name})
+    sync_files_up(paths=[PORTFOLIO_PATH])
     logging.info(
         "Portfolio with cost basis %s and profit %s generated and added.",
         curr_value,
@@ -145,7 +145,7 @@ def add_entry_main() -> None:
         options.count,
         options.price,
     )
-    sync_files_up(paths={ENTRIES_PATH: ENTRIES_PATH.name})
+    sync_files_up(paths=[ENTRIES_PATH])
 
 
 def export_data_main() -> None:
@@ -226,7 +226,7 @@ def add_dividend_main() -> None:
     except TypeError as err:
         raise RuntimeError("parameters have bad types, please try again") from err
     save_dividend(date, pair, amount)
-    sync_files_up(paths={DIVIDEND_PATH: DIVIDEND_PATH.name})
+    sync_files_up(paths=[DIVIDEND_PATH])
     logging.info(
         "Entry with date %s , stock %s, amount %s .",
         options.date,
@@ -245,20 +245,31 @@ def set_cloud_main() -> None:
     env_vars: Dict[str, str] = {}
     if options.azure is not None:
         env_vars["AZURE_CONNECTION_STR"] = options.azure
+        logging.info("Azure connection string parsed correctly.")
     cloud = None
     try:
         if options.cloud is not None:
             cloud = CloudType(options.cloud.lower())
             env_vars["CLOUD_TYPE"] = options.cloud.lower()
-    except ValueError as e:
+            logging.info("Cloud %s is valid option.", options.cloud)
+    except ValueError as err:
         logging.error("Provided invalid cloud type %s , raising error.", options.cloud)
-        raise e
-    set_env_variables(env_vars)
-    if options.tactic == 'local' and cloud is not None:
+        raise err
+    if options.tactic is None and cloud is not None:
+        err_msg = "Specified cloud but not tactic for the files. " "Raising error."
+        logging.error(err_msg)
+        raise ValueError(err_msg)
+    save_variables_to_file(env_vars)
+    if options.tactic == "local" and cloud is not None:
         sync_files_up(cloud_type=cloud)
-    if options.tactic == 'cloud' and cloud is not None:
+        logging.info("Successfully synced with the cloud with 'local' tactic.")
+    if options.tactic == "cloud" and cloud is not None:
         sync_files_down(cloud_type=cloud)
-    logging.info("Successfully saved cloud settings to the env file.")
+        logging.info("Successfully synced with the cloud with 'cloud' tactic.")
+    logging.info(
+        "Everything saved successfully to the system and all changes"
+        " happened correctly."
+    )
 
 
 def print_main_help() -> None:
@@ -273,6 +284,7 @@ def print_main_help() -> None:
         "export-data [opts] - exports data to your directory\n\n"
         "save-token (token) - save your token to rapidAPI\n\n"
         "add-dividend [opts] - add dividend for current pair and date\n\n"
+        "set-cloud [opts] - set up your cloud environment and sync data with it\n\n"
     )
 
 
