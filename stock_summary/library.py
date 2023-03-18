@@ -6,11 +6,11 @@ import logging
 import os
 import pathlib
 import shutil
-import sys
 from functools import lru_cache
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Mapping, Optional
 
+import dotenv
 import pandas as pd
 import plotly.graph_objects as go
 import requests
@@ -20,6 +20,7 @@ from stock_summary.settings import (
     DATA_PATH,
     DIVIDEND_PATH,
     ENTRIES_PATH,
+    ENV_VARIABLES,
     EXCHANGE_RATE_HEADERS,
     EXCHANGE_RATE_URL,
     INIT_DATASETS_PATH,
@@ -211,7 +212,7 @@ def export_data(directory: pathlib.Path) -> None:
 
 
 def save_dividend(date: datetime.datetime, stock: str, amount: float) -> None:
-    """ Saves dividend into the file"""
+    """Saves dividend into the file"""
     currency = get_pair_prices([stock])[stock]["currency"]
     converted_amount = convert_currency(date, currency, "CZK", amount)
     with open(DIVIDEND_PATH, "a", newline="", encoding="utf-8") as csvfile:
@@ -228,7 +229,7 @@ def save_dividend(date: datetime.datetime, stock: str, amount: float) -> None:
 def convert_currency(
     date: datetime.datetime, from_curr: str, to_curr: str, amount: float
 ) -> float:
-    """ Convert currency by rate from the given date"""
+    """Convert currency by rate from the given date"""
     exchange_rates = get_exchange_rates(date, to_curr)
     return amount * exchange_rates[from_curr]
 
@@ -287,3 +288,21 @@ def save_entry(
         f"Entry date: {date} stock: {stock} count: {count} "
         f"price: {price} saved to {ENTRIES_PATH}"
     )
+
+
+def set_env_variables(
+    env_vars: Mapping[str, str],
+    env_path: pathlib.Path = ENV_VARIABLES,
+) -> None:
+    """
+    Takes mapping with variables key=value and saves them to
+    the env_vars file. If the file doesn't exist, then creates
+    it.
+    """
+    if not os.path.exists(env_path):
+        with open(env_path, "w") as _:
+            pass
+    env_file = dotenv.find_dotenv(str(env_path.resolve()))
+    for key, value in env_vars.items():
+        dotenv.set_key(env_file, key, value)
+    logging.debug("Successfully saved %s to the %s", env_vars, env_file)

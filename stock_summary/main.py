@@ -8,6 +8,7 @@ import shutil
 import sys
 import webbrowser
 from pathlib import Path
+from typing import Dict
 
 import jinja2
 
@@ -28,10 +29,12 @@ from stock_summary.library import (
     rewrite_data_files,
     save_dividend,
     save_entry,
+    set_env_variables,
     validate_date,
 )
 from stock_summary.parsers import (
     add_entry_parser,
+    cloud_parser,
     dividend_parser,
     export_parser,
     import_parser,
@@ -44,6 +47,7 @@ from stock_summary.settings import (
     PORTFOLIO_PATH,
     SETTINGS_PATH,
     TOKEN_PATH,
+    CloudType,
 )
 
 
@@ -127,9 +131,7 @@ def add_entry_main() -> None:
         raise RuntimeError("parameters have bad types, please try again") from err
     currency = get_pair_prices(get_pairs())[options.stock]["currency"]
     converted_amount = convert_currency(date, currency, "CZK", count * price)
-    save_entry(
-        options.date, pair, options.count, options.price, converted_amount
-    )
+    save_entry(options.date, pair, options.count, options.price, converted_amount)
     logging.info(
         "Entry with date %s , stock %s, count %s , price %s successfully added.",
         options.date,
@@ -220,6 +222,27 @@ def add_dividend_main() -> None:
         options.stock,
         options.amount,
     )
+
+
+def set_cloud_main() -> None:
+    """
+    Set cloud settings to the env file, so application
+    can work with them in the run.
+    """
+    parser = cloud_parser()
+    (options, _) = parser.parse_args()
+    env_vars: Dict[str, str] = {}
+    if options.azure is not None:
+        env_vars["AZURE_CONNECTION_STR"] = options.azure
+    try:
+        if options.cloud is not None:
+            CloudType(options.cloud.lower())
+            env_vars["CLOUD_TYPE"] = options.cloud.lower()
+    except ValueError as e:
+        logging.error("Provided invalid cloud type %s , raising error.", options.cloud)
+        raise e
+    set_env_variables(env_vars)
+    logging.info("Successfully saved cloud settings to the env file.")
 
 
 def print_main_help() -> None:
