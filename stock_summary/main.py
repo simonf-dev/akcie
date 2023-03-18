@@ -12,6 +12,8 @@ from typing import Dict
 
 import jinja2
 
+from stock_summary.clouds.logic import sync_files_up, sync_files_down
+
 logging_level = os.environ.get("DEBUG_LEVEL")
 logging.basicConfig(level=logging_level if logging_level else "INFO")
 from stock_summary.library import (
@@ -53,6 +55,7 @@ from stock_summary.settings import (
 
 def generate_portfolio_main() -> None:
     """Generates portfolio for actual time and entered entries."""
+    sync_files_down()
     conversion_rates = get_exchange_rates()
     pairs = get_pairs()
     prices = get_pair_prices(pairs)
@@ -74,6 +77,7 @@ def generate_portfolio_main() -> None:
             f"{now.strftime('%d/%m/%y')} {curr_value} "
             f"{curr_value - init_value + get_dividend_sum()}\n"
         )
+    sync_files_up(paths={PORTFOLIO_PATH: PORTFOLIO_PATH.name})
     logging.info(
         "Portfolio with cost basis %s and profit %s generated and added.",
         curr_value,
@@ -85,6 +89,7 @@ def generate_html_main() -> None:
     """
     Generates HTML and executes it in your browser.
     """
+    sync_files_down()
     summary_records = list(get_entries_summary().values())
     dividend_summary = list(get_dividend_summary().values())
 
@@ -119,6 +124,7 @@ def add_entry_main() -> None:
     """
     parser = add_entry_parser()
     (options, _) = parser.parse_args()
+    sync_files_down()
     if not options.stock or not options.date or not options.count or not options.price:
         logging.error("You have to enter all needed params")
         raise ValueError("You have to enter all needed params")
@@ -139,12 +145,14 @@ def add_entry_main() -> None:
         options.count,
         options.price,
     )
+    sync_files_up(paths={ENTRIES_PATH: ENTRIES_PATH.name})
 
 
 def export_data_main() -> None:
     """Main function for export data command."""
     parser = export_parser()
     (options, _) = parser.parse_args()
+    sync_files_down()
     if not options.directory:
         logging.error("You need to pass the directory for the output.")
         sys.exit(1)
@@ -189,6 +197,7 @@ def import_data_main() -> None:
         logging.info(
             f"Dividends {options.dividends} successfully updated to {DIVIDEND_PATH}"
         )
+    sync_files_up()
 
 
 def save_token_main() -> None:
@@ -209,6 +218,7 @@ def add_dividend_main() -> None:
     if not options.stock or not options.date or not options.amount:
         logging.error("You have to enter all needed params")
         raise ValueError("You have to enter all needed params")
+    sync_files_down()
     pair = options.stock.strip()
     try:
         date = validate_date(options.date)
@@ -216,6 +226,7 @@ def add_dividend_main() -> None:
     except TypeError as err:
         raise RuntimeError("parameters have bad types, please try again") from err
     save_dividend(date, pair, amount)
+    sync_files_up(paths={DIVIDEND_PATH: DIVIDEND_PATH.name})
     logging.info(
         "Entry with date %s , stock %s, amount %s .",
         options.date,
@@ -234,14 +245,19 @@ def set_cloud_main() -> None:
     env_vars: Dict[str, str] = {}
     if options.azure is not None:
         env_vars["AZURE_CONNECTION_STR"] = options.azure
+    cloud = None
     try:
         if options.cloud is not None:
-            CloudType(options.cloud.lower())
+            cloud = CloudType(options.cloud.lower())
             env_vars["CLOUD_TYPE"] = options.cloud.lower()
     except ValueError as e:
         logging.error("Provided invalid cloud type %s , raising error.", options.cloud)
         raise e
     set_env_variables(env_vars)
+    if options.tactic == 'local' and cloud is not None:
+        sync_files_up(cloud_type=cloud)
+    if options.tactic == 'cloud' and cloud is not None:
+        sync_files_down(cloud_type=cloud)
     logging.info("Successfully saved cloud settings to the env file.")
 
 
@@ -278,12 +294,14 @@ def main() -> None:
             save_token_main()
         elif sys.argv[1] == "add-dividend":
             add_dividend_main()
+        elif sys.argv[1] == "set-cloud":
+            set_cloud_main()
         elif sys.argv[1] == "-h" or sys.argv[1] == "--help":
             print_main_help()
         else:
             logging.error(
                 "Invalid first command, use option from: 'retrain-model','make-analysis"
-                ",'retrain-model','get-result'"
+                ",'retrain-model','get-result', 'set-cloud"
             )
             sys.exit(1)
     except (RuntimeError, ValueError) as err:

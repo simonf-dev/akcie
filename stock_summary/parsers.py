@@ -112,4 +112,11 @@ def cloud_parser() -> optparse.OptionParser:
         help="Connection string for the Azure File storage, shares, directories and files will be"
         "created by the tool itself.",
     )
+
+    parser.add_option(
+        "--tactic",
+        dest="tactic",
+        help="Tactic for the sync. You can specify 'cloud' (your files will be overwritten from the cloud)"
+             " or 'local' (your files will rewrite the cloud ones)."
+    )
     return parser
