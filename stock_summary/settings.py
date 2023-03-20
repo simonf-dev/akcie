@@ -2,59 +2,17 @@
 import logging
 import os
 import pathlib
-from enum import Enum
-from typing import TypedDict
 
 import appdirs
 from dotenv import load_dotenv
+
+from stock_summary.help_structures import CloudType
 
 DATA_PATH = pathlib.Path(appdirs.user_data_dir("stock_summary")).resolve()
 SETTINGS_PATH = pathlib.Path(appdirs.user_config_dir("stock_summary")).resolve()
 INIT_DATASETS_PATH = (
     pathlib.Path(__file__).parent.resolve().joinpath("init_datasets").resolve()
 )
-
-
-class CloudType(Enum):
-    """Enum which describes type of the cloud"""
-
-    AZURE = "azure"
-    NONE = "none"
-
-
-class LoggingSettings(Enum):
-    """Enum which saves settings for logging"""
-
-    OUTPUT_FILE = "tmp.log"
-    LOGGING_LEVEL = logging.DEBUG
-
-
-class PairResponse(TypedDict):
-    """Pair response that we get from API for each pair."""
-
-    symbol: str
-    regularMarketPrice: float
-    currency: str
-
-
-class SummaryDict(TypedDict):
-    """This dict is used to summarize entries for view Jinja HTML"""
-
-    symbol: str
-    actual_price: float
-    actual_basis: float
-    cost_basis: float
-    count: float
-    currency: str
-
-
-class Dividend(TypedDict):
-    """THis dict is used to summarize dividends for view Jinja HTML"""
-
-    currency: str
-    symbol: str
-    converted_value: float
-    value: float
 
 
 ENTRIES_PATH = DATA_PATH.joinpath("entries").resolve()
@@ -85,6 +43,7 @@ STOCK_PRICE_HEADERS = {
 
 # Cloud variables
 load_dotenv(ENV_VARIABLES)
+
 try:
     CLOUD_TYPE = (
         CloudType(os.environ["CLOUD_TYPE"])

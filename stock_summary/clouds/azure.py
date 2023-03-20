@@ -1,15 +1,15 @@
+""" Azure cloud instance"""
 import logging
 import pathlib
 
-from azure.core.exceptions import (
-    ClientAuthenticationError,
-    ResourceExistsError,
-    ResourceNotFoundError,
-)
+from azure.core.exceptions import ResourceExistsError, ResourceNotFoundError
 from azure.storage.fileshare import ShareClient, ShareFileClient, ShareServiceClient
 
 from stock_summary.settings import DIVIDEND_PATH, ENTRIES_PATH, PORTFOLIO_PATH
-logging.getLogger("azure.core.pipeline.policies.http_logging_policy").setLevel(logging.WARNING)
+
+logging.getLogger("azure.core.pipeline.policies.http_logging_policy").setLevel(
+    logging.WARNING
+)
 
 
 class Azure:
@@ -36,7 +36,9 @@ class Azure:
             logging.info("Creating share: %s", self.FILE_SHARE)
 
         except ResourceExistsError:
-            logging.info("Share already exists, using the existing one %s", self.FILE_SHARE)
+            logging.info(
+                "Share already exists, using the existing one %s", self.FILE_SHARE
+            )
 
     def check_connection(self) -> None:
         """Checks connection and raises error if there is some problem."""
@@ -60,15 +62,15 @@ class Azure:
         Cloud path is taken automatically from the mapping.
         """
         try:
-            source_file = open(local_path, "rb")
-            data = source_file.read()
-            dest_path = self.CLOUD_FILES_MAPPING[local_path]
-            file_client: ShareFileClient = ShareFileClient.from_connection_string(
-                self.connection_str, self.FILE_SHARE, dest_path
-            )
+            with open(local_path, "rb") as source_file:
+                data = source_file.read()
+                dest_path = self.CLOUD_FILES_MAPPING[local_path]
+                file_client: ShareFileClient = ShareFileClient.from_connection_string(
+                    self.connection_str, self.FILE_SHARE, dest_path
+                )
 
-            logging.info("Uploading to: %s/%s", self.FILE_SHARE, dest_path)
-            file_client.upload_file(data)
+                logging.info("Uploading to: %s/%s", self.FILE_SHARE, dest_path)
+                file_client.upload_file(data)
 
         except ResourceExistsError as err:
             logging.error("ResourceExistsError:", exc_info=True)

@@ -116,7 +116,8 @@ def cloud_parser() -> optparse.OptionParser:
     parser.add_option(
         "--tactic",
         dest="tactic",
-        help="Tactic for the sync. You can specify 'cloud' (your files will be overwritten from the cloud)"
+        help="Tactic for the sync. You can specify 'cloud' "
+        "(your files will be overwritten from the cloud)"
         " or 'local' (your files will rewrite the cloud ones).",
     )
     return parser

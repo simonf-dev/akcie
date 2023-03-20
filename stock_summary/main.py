@@ -13,9 +13,11 @@ from typing import Dict
 import jinja2
 
 from stock_summary.clouds.logic import sync_files_down, sync_files_up
+from stock_summary.help_structures import CloudType
 
 logging_level = os.environ.get("DEBUG_LEVEL")
 logging.basicConfig(level=logging_level if logging_level else "INFO")
+from stock_summary import settings
 from stock_summary.library import (
     convert_currency,
     export_data,
@@ -41,16 +43,6 @@ from stock_summary.parsers import (
     export_parser,
     import_parser,
 )
-from stock_summary.settings import (
-    DIVIDEND_PATH,
-    ENTRIES_PATH,
-    INDEX_HTML_FILE,
-    MAIN_CSS_FILE,
-    PORTFOLIO_PATH,
-    SETTINGS_PATH,
-    TOKEN_PATH,
-    CloudType,
-)
 
 
 def generate_portfolio_main() -> None:
@@ -59,7 +51,7 @@ def generate_portfolio_main() -> None:
     conversion_rates = get_exchange_rates()
     pairs = get_pairs()
     prices = get_pair_prices(pairs)
-    with open(ENTRIES_PATH, newline="", encoding="utf-8") as csvfile:
+    with open(settings.ENTRIES_PATH, newline="", encoding="utf-8") as csvfile:
         entries_reader = csv.reader(csvfile, delimiter=" ", quotechar="|")
         init_value: float = 0
         curr_value: float = 0
@@ -71,13 +63,13 @@ def generate_portfolio_main() -> None:
             conversion_rate = conversion_rates[prices[row[1]]["currency"]]
             init_value += float(row[4])
             curr_value += count * prices[row[1]]["regularMarketPrice"] * conversion_rate
-    with open(PORTFOLIO_PATH, "a", encoding="utf-8") as result_file:
+    with open(settings.PORTFOLIO_PATH, "a", encoding="utf-8") as result_file:
         now = datetime.datetime.now()
         result_file.write(
             f"{now.strftime('%d/%m/%y')} {curr_value} "
             f"{curr_value - init_value + get_dividend_sum()}\n"
         )
-    sync_files_up(paths=[PORTFOLIO_PATH])
+    sync_files_up(paths=[settings.PORTFOLIO_PATH])
     logging.info(
         "Portfolio with cost basis %s and profit %s generated and added.",
         curr_value,
@@ -102,20 +94,21 @@ def generate_html_main() -> None:
         encoding="utf-8",
     ) as html_template:
         template = environment.from_string(html_template.read())
-    with open(INDEX_HTML_FILE, "w", encoding="utf-8") as index_file:
+    with open(settings.INDEX_HTML_FILE, "w", encoding="utf-8") as index_file:
         index_file.write(
             template.render(
                 plot_html=plot_html, records=summary_records, dividends=dividend_summary
             )
         )
     shutil.copy2(
-        Path(__file__).parent.resolve() / "html_files" / "main.css", MAIN_CSS_FILE
+        Path(__file__).parent.resolve() / "html_files" / "main.css",
+        settings.MAIN_CSS_FILE,
     )
-    logging.info(f"Index html file successfully saved to {INDEX_HTML_FILE}")
+    logging.info(f"Index html file successfully saved to {settings.INDEX_HTML_FILE}")
     prepend_str = ""
     if platform.system().lower() == "darwin":
         prepend_str = "file:///"
-    webbrowser.open(f"{prepend_str}{INDEX_HTML_FILE}")
+    webbrowser.open(f"{prepend_str}{settings.INDEX_HTML_FILE}")
 
 
 def add_entry_main() -> None:
@@ -145,7 +138,7 @@ def add_entry_main() -> None:
         options.count,
         options.price,
     )
-    sync_files_up(paths=[ENTRIES_PATH])
+    sync_files_up(paths=[settings.ENTRIES_PATH])
 
 
 def export_data_main() -> None:
@@ -183,19 +176,19 @@ def import_data_main() -> None:
             logging.error("Action canceled, ending without any action.")
             sys.exit(1)
     if options.portfolio:
-        import_data(Path(options.portfolio), PORTFOLIO_PATH)
+        import_data(Path(options.portfolio), settings.PORTFOLIO_PATH)
         logging.info(
-            f"Portfolio {options.portfolio} successfully updated to {PORTFOLIO_PATH}"
+            f"Portfolio {options.portfolio} successfully updated to {settings.PORTFOLIO_PATH}"
         )
     if options.entries:
-        import_data(Path(options.entries), ENTRIES_PATH)
+        import_data(Path(options.entries), settings.ENTRIES_PATH)
         logging.info(
-            f"Entries {options.entries} successfully updated to {ENTRIES_PATH}"
+            f"Entries {options.entries} successfully updated to {settings.ENTRIES_PATH}"
         )
     if options.dividends:
-        import_data(Path(options.dividends), DIVIDEND_PATH)
+        import_data(Path(options.dividends), settings.DIVIDEND_PATH)
         logging.info(
-            f"Dividends {options.dividends} successfully updated to {DIVIDEND_PATH}"
+            f"Dividends {options.dividends} successfully updated to {settings.DIVIDEND_PATH}"
         )
     sync_files_up()
 
@@ -203,10 +196,10 @@ def import_data_main() -> None:
 def save_token_main() -> None:
     """Main function for save token command."""
     token = sys.argv[2]
-    os.makedirs(SETTINGS_PATH, exist_ok=True)
-    with open(TOKEN_PATH, "w", encoding="utf-8") as token_file:
+    os.makedirs(settings.SETTINGS_PATH, exist_ok=True)
+    with open(settings.TOKEN_PATH, "w", encoding="utf-8") as token_file:
         token_file.write(token)
-    logging.info(f"Token successfully saved to {TOKEN_PATH}")
+    logging.info(f"Token successfully saved to {settings.TOKEN_PATH}")
 
 
 def add_dividend_main() -> None:
@@ -226,7 +219,7 @@ def add_dividend_main() -> None:
     except TypeError as err:
         raise RuntimeError("parameters have bad types, please try again") from err
     save_dividend(date, pair, amount)
-    sync_files_up(paths=[DIVIDEND_PATH])
+    sync_files_up(paths=[settings.DIVIDEND_PATH])
     logging.info(
         "Entry with date %s , stock %s, amount %s .",
         options.date,
@@ -245,27 +238,29 @@ def set_cloud_main() -> None:
     env_vars: Dict[str, str] = {}
     if options.azure is not None:
         env_vars["AZURE_CONNECTION_STR"] = options.azure
+        settings.AZURE_CONNECTION_STR = options.azure
         logging.info("Azure connection string parsed correctly.")
     cloud = None
     try:
         if options.cloud is not None:
             cloud = CloudType(options.cloud.lower())
             env_vars["CLOUD_TYPE"] = options.cloud.lower()
+            settings.CLOUD_TYPE = cloud
             logging.info("Cloud %s is valid option.", options.cloud)
     except ValueError as err:
         logging.error("Provided invalid cloud type %s , raising error.", options.cloud)
         raise err
     if options.tactic is None and cloud is not None:
-        err_msg = "Specified cloud but not tactic for the files. " "Raising error."
+        err_msg = "Specified cloud but not tactic for the files. Raising error."
         logging.error(err_msg)
         raise ValueError(err_msg)
-    save_variables_to_file(env_vars)
     if options.tactic == "local" and cloud is not None:
         sync_files_up(cloud_type=cloud)
         logging.info("Successfully synced with the cloud with 'local' tactic.")
     if options.tactic == "cloud" and cloud is not None:
         sync_files_down(cloud_type=cloud)
         logging.info("Successfully synced with the cloud with 'cloud' tactic.")
+    save_variables_to_file(env_vars)
     logging.info(
         "Everything saved successfully to the system and all changes"
         " happened correctly."
