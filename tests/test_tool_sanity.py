@@ -14,8 +14,8 @@ def block_network(function: Callable[[], None]) -> Callable[[], None]:
         try:
             socket.socket = NetworkBlocker  # type: ignore
             function()
-        except Exception:
-            pass
+        except Exception as err:
+            raise err
         finally:
             socket.socket = sock  # type: ignore
 

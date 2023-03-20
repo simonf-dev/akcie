@@ -8,8 +8,9 @@ from stock_summary.clouds.azure import Azure
 from stock_summary.help_structures import CloudType
 
 
-def get_cloud(cloud_type: CloudType = settings.CLOUD_TYPE) -> Optional[Azure]:
+def get_cloud(cloud_type: Optional[CloudType] = None) -> Optional[Azure]:
     """Returns needed type of the cloud."""
+    cloud_type = cloud_type if cloud_type is not None else settings.CLOUD_TYPE
     if cloud_type == CloudType.NONE:
         return None
     if settings.AZURE_CONNECTION_STR is None:
@@ -25,7 +26,7 @@ def get_cloud(cloud_type: CloudType = settings.CLOUD_TYPE) -> Optional[Azure]:
 
 
 def sync_files_down(
-    cloud_type: CloudType = settings.CLOUD_TYPE,
+    cloud_type: Optional[CloudType] = None,
     paths: Optional[Sequence[pathlib.Path]] = None,
 ) -> None:
     """
@@ -33,6 +34,7 @@ def sync_files_down(
     files that you want to sync. They are mapped in Cloud logic to their paths inside
     the cloud.
     """
+    cloud_type = cloud_type if cloud_type is not None else settings.CLOUD_TYPE
     logging.info("Syncing files %s down from the cloud %s", paths, cloud_type.value)
     cloud = get_cloud(cloud_type=cloud_type)
     if cloud is None:
@@ -48,7 +50,7 @@ def sync_files_down(
 
 
 def sync_files_up(
-    cloud_type: CloudType = settings.CLOUD_TYPE,
+    cloud_type: Optional[CloudType] = None,
     paths: Optional[Sequence[pathlib.Path]] = None,
 ) -> None:
     """
@@ -56,6 +58,7 @@ def sync_files_up(
     files that you want to sync. They are mapped in Cloud logic to their paths inside
     the cloud.
     """
+    cloud_type = cloud_type if cloud_type is not None else settings.CLOUD_TYPE
     logging.info("Syncing files %s up to the cloud %s", paths, cloud_type.value)
     cloud = get_cloud(cloud_type=cloud_type)
     if cloud is None:
