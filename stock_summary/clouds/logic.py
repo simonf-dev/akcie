@@ -12,7 +12,7 @@ def get_cloud(cloud_type: CloudType = settings.CLOUD_TYPE) -> Optional[Azure]:
     """Returns needed type of the cloud."""
     if cloud_type == CloudType.NONE:
         return None
-    if settings.AZURE_CONNECTION_STR == "":
+    if settings.AZURE_CONNECTION_STR is None:
         err_msg = (
             "Using Azure cloud without connection string is impossible. "
             "Set connection string, or turn off the cloud."

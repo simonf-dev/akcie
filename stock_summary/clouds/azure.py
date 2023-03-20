@@ -30,7 +30,7 @@ class Azure:
             ShareServiceClient.from_connection_string(connection_str)
         )
         self.check_connection()
-        self._share_client = self.get_share()
+        self._share_client = self.get_share_client()
         try:
             self._share_client.create_share()
             logging.info("Creating share: %s", self.FILE_SHARE)
@@ -43,7 +43,7 @@ class Azure:
     def check_connection(self) -> None:
         """Checks connection and raises error if there is some problem."""
         try:
-            self._service_client.get_service_properties()
+            self._service_client.get_service_properties(timeout=5)
         except Exception as err:
             logging.error(
                 "Unable to connect to the Azure client with connection string.",
@@ -51,7 +51,7 @@ class Azure:
             )
             raise err
 
-    def get_share(self) -> ShareClient:
+    def get_share_client(self) -> ShareClient:
         """Returns SharClient which can be used further."""
         share_client = self._service_client.get_share_client(self.FILE_SHARE)
         return share_client
