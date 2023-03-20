@@ -66,7 +66,14 @@ pip3 install stock_summary_tool
 
 You can see plot with your actual investments in stocks, and also your profit (generated from portfolio file). Below you can see your actual holdings and 
 statistics about them. Only actual holdings with >0 count are shown. The last table is for dividends.
-
+### Use cloud (Azure)
+1. Create Azure account if you don't have it on: https://azure.microsoft.com/en-us/free
+2. Create your Azure storage account as it's described in https://learn.microsoft.com/en-us/azure/storage/files/storage-how-to-use-files-portal?tabs=azure-portal (only part 'Create storage account')
+3. In your storage account click on 'Access tokens' and get your connection string.
+4. Set up cloud on your application:(if you set up cloud on your second device use `--tactic=cloud`, it determines init sync tactic [cloud files -> local files or local files -> cloud files])
+```
+stock_summary_tool set-cloud --cloud=azure --azure="{YOUR CONNECTION STRING} --tactic=local
+``` 
 ### Rules about generating portfolio and balance
 1. Entries are converted to the base currency with conversion rate for the execution day.
 2. Dividends are converted to the base currency with conversion rate for the execution day.
@@ -78,8 +85,7 @@ statistics about them. Only actual holdings with >0 count are shown. The last ta
 1. Adding option for fees to the operations.
 2. Supporting more languages and base currencies.
 3. Adding backward possibility to generate portfolio and no need to generate it manually anymore (blocked by higher number of API calls and subscription)
-4. Support for cloud storage (easy setup and option to use tool across more systems without manual import/export)
-5. Adding option to track other investments except stocks/cryptocurrencies/dividends.
+4. Adding option to track other investments except stocks/cryptocurrencies/dividends.
 
 Be free to open issue or ask me, if you want to know something or you want to help with the project.
 
