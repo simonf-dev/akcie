@@ -55,6 +55,7 @@ except ValueError:
     CLOUD_TYPE = CloudType.NONE
 AZURE_CONNECTION_STR = (
     os.environ["AZURE_CONNECTION_STR"]
-    if os.environ.get("AZURE_CONNECTION_STR") is not None and os.environ.get("AZURE_CONNECTION_STR") != ""
+    if os.environ.get("AZURE_CONNECTION_STR") is not None
+    and os.environ.get("AZURE_CONNECTION_STR") != ""
     else None
 )
