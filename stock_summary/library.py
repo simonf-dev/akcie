@@ -297,7 +297,7 @@ def save_variables_to_file(
     it.
     """
     if not os.path.exists(env_path):
-        with open(env_path, "w") as env_file:
+        with open(env_path, "wb") as _:
             pass
     env_file = dotenv.find_dotenv(str(env_path.resolve()))
     for key, value in env_vars.items():
