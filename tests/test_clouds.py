@@ -2,13 +2,15 @@ from unittest.mock import patch
 
 import pytest
 from azure.core.exceptions import ServiceRequestError
+
 from stock_summary import settings
-from stock_summary.clouds.logic import get_cloud
 from stock_summary.clouds import azure
+from stock_summary.clouds.logic import get_cloud
 from stock_summary.help_structures import CloudType
 
+
 def test_invalid_azure_settings() -> None:
-    """ Tests invalid azure settings and thrown exceptions."""
+    """Tests invalid azure settings and thrown exceptions."""
     settings.AZURE_CONNECTION_STR = None
     with pytest.raises(ValueError):
         get_cloud(cloud_type=CloudType.AZURE)
