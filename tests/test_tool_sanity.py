@@ -1,12 +1,28 @@
 import socket
-from typing import Any
+from typing import Any, Callable, Dict, List, Tuple
+
+sock = socket.socket
 
 
-class block_network(socket.socket):
+class NetworkBlocker(socket.socket):
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         raise Exception("Network call blocked")
 
-socket.socket = block_network # type: ignore
+
+def block_network(function: Callable[[], None]) -> Callable[[], None]:
+    def wrapper_blocking_network() -> None:
+        try:
+            socket.socket = NetworkBlocker  # type: ignore
+            function()
+        except Exception as err:
+            raise err
+        finally:
+            socket.socket = sock  # type: ignore
+
+    return wrapper_blocking_network
+
+
+socket.socket = NetworkBlocker  # type: ignore
 
 
 from pathlib import Path
@@ -16,8 +32,11 @@ from stock_summary.library import get_dividend_sum, get_entries_summary, get_pai
 from stock_summary.settings import INIT_DATASETS_PATH
 
 TESTING_DATASETS_PATH = Path(__file__).parent.resolve() / "testing_data"
+# unblock connection again
+socket.socket = sock  # type: ignore
 
 
+@block_network
 def test_entries_summary() -> None:
     # namockovat funkce pro exchange a pairs
     # vypocitat, kolik by mely dat summary funkce, zkontrolovat
@@ -138,14 +157,17 @@ def test_entries_summary() -> None:
             )
 
 
+@block_network
 def test_dividend_summary() -> None:
-    """ testing get_dividend_summary function"""
+    """testing get_dividend_summary function"""
 
 
+@block_network
 def test_html_output() -> None:
-    """ testing html output from main function"""
+    """testing html output from main function"""
 
 
+@block_network
 def test_dividend_sum() -> None:
     """Testing get_dividend_sum function"""
     dividend_sum = get_dividend_sum(
@@ -156,6 +178,7 @@ def test_dividend_sum() -> None:
     assert dividend_sum == 0
 
 
+@block_network
 def test_get_pairs() -> None:
     """Testing get_pairs function"""
     pairs = get_pairs(entries_path=TESTING_DATASETS_PATH / "testing_data_A" / "entries")

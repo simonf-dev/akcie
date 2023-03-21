@@ -93,3 +93,31 @@ def dividend_parser() -> optparse.OptionParser:
         help="Amount of the earned money " "(in stock currency)",
     )
     return parser
+
+
+def cloud_parser() -> optparse.OptionParser:
+    """Parser for cloud commands."""
+    parser = optparse.OptionParser(
+        usage="main.py set-cloud [options]\n" "Set cloud settings for the files."
+    )
+    parser.add_option(
+        "--cloud",
+        dest="cloud",
+        help="Type of the cloud to use (now supported 'none'(default, only local files)"
+        " and 'azure')",
+    )
+    parser.add_option(
+        "--azure",
+        dest="azure",
+        help="Connection string for the Azure File storage. Shares, directories and files will be"
+        "created by the tool itself.",
+    )
+
+    parser.add_option(
+        "--tactic",
+        dest="tactic",
+        help="Tactic for the sync. You can specify 'cloud' "
+        "(your files will be overwritten from the cloud)"
+        " or 'local' (your files will rewrite the cloud ones).",
+    )
+    return parser
