@@ -7,6 +7,7 @@ from azure.storage.fileshare import ShareClient, ShareFileClient, ShareServiceCl
 
 from stock_summary.settings import DIVIDEND_PATH, ENTRIES_PATH, PORTFOLIO_PATH
 
+# Azure has really huge and detailed logging messages, we would like to suppress them
 logging.getLogger("azure.core.pipeline.policies.http_logging_policy").setLevel(
     logging.WARNING
 )
@@ -17,7 +18,7 @@ class Azure:
     API for the Azure cloud. It provides needed methods to sync data files
     """
 
-    FILE_SHARE = "stocksummary"
+    FILE_SHARE = "stocksummary"  # reserved share for the application
     CLOUD_FILES_MAPPING = {
         ENTRIES_PATH: ENTRIES_PATH.name,
         DIVIDEND_PATH: DIVIDEND_PATH.name,
@@ -25,7 +26,7 @@ class Azure:
     }
 
     def __init__(self, connection_str: str):
-        self.connection_str = connection_str
+        self._connection_str = connection_str
         self._service_client: ShareServiceClient = (
             ShareServiceClient.from_connection_string(connection_str)
         )
@@ -96,7 +97,7 @@ class Azure:
 
             # Create a ShareFileClient from a connection string
             file_client: ShareFileClient = ShareFileClient.from_connection_string(
-                self.connection_str, self.FILE_SHARE, source_file_name
+                self._connection_str, self.FILE_SHARE, source_file_name
             )
 
             logging.info("Downloading to: %s", dst_file_name)

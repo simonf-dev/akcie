@@ -9,7 +9,10 @@ from stock_summary.help_structures import CloudType
 
 
 def get_cloud(cloud_type: Optional[CloudType] = None) -> Optional[Azure]:
-    """Returns needed type of the cloud."""
+    """
+    Returns needed type of the cloud. You can pass type of the cloud that you want
+    or the actual 'settings.CLOUD_TYPE' variable is taken.
+    """
     cloud_type = cloud_type if cloud_type is not None else settings.CLOUD_TYPE
     if cloud_type == CloudType.NONE:
         return None
@@ -23,7 +26,6 @@ def get_cloud(cloud_type: Optional[CloudType] = None) -> Optional[Azure]:
         raise ValueError(err_msg)
     cloud = Azure(settings.AZURE_CONNECTION_STR)
     return cloud
-
 
 def sync_files_down(
     cloud_type: Optional[CloudType] = None,
