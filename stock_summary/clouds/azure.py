@@ -67,7 +67,7 @@ class Azure:
                 data = source_file.read()
                 dest_path = self.CLOUD_FILES_MAPPING[local_path]
                 file_client: ShareFileClient = ShareFileClient.from_connection_string(
-                    self.connection_str, self.FILE_SHARE, dest_path
+                    self._connection_str, self.FILE_SHARE, dest_path
                 )
 
                 logging.info("Uploading to: %s/%s", self.FILE_SHARE, dest_path)
