@@ -30,7 +30,7 @@
 3. Generate and save your API key:
 
    1. Register or log in to the [Yahoo Finance API page](https://rapidapi.com/sparior/api/yahoo-finance15).
-   2. Register or log in to the [Fixer API page](https://rapidapi.com/fixer/api/fixer-currency).
+   2. Register or log in to the [Exchange API page](https://rapidapi.com/principalapis/api/currency-conversion-and-exchange-rates).
    3. Subscribe to both APIs and obtain your API key.
    4. Save your key for the project:
 
