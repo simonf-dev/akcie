@@ -28,10 +28,10 @@ try:
 except FileNotFoundError:
     API_TOKEN = ""
 
-EXCHANGE_RATE_URL = "https://fixer-fixer-currency-v1.p.rapidapi.com"
+EXCHANGE_RATE_URL = "https://currency-conversion-and-exchange-rates.p.rapidapi.com"
 EXCHANGE_RATE_HEADERS = {
     "X-RapidAPI-Key": API_TOKEN,
-    "X-RapidAPI-Host": "fixer-fixer-currency-v1.p.rapidapi.com",
+    "X-RapidAPI-Host": "currency-conversion-and-exchange-rates.p.rapidapi.com",
 }
 
 STOCK_PRICE_URL = "https://yahoo-finance15.p.rapidapi.com/api/yahoo/qu/quote"
