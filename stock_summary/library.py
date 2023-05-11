@@ -149,8 +149,6 @@ def get_plot_html(dataset: Any) -> Any:
     # Set y-axes titles
     fig.update_yaxes(title_text="<b>AKTUÁLNÍ HODNOTA</b>", secondary_y=False)
     fig.update_yaxes(title_text="<b>PROFIT</b>", secondary_y=True)
-
-    fig.show()
     return fig.to_html()
 
 
