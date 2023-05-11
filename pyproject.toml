@@ -16,6 +16,7 @@ plotly = "^5.11.0"
 appdirs = "^1.4.4"
 azure-storage-file-share = "^12.11.1"
 python-dotenv = "^1.0.0"
+pydantic = "^1.10.7"
 
 [tool.poetry.group.dev.dependencies]
 mypy = "0.991"
@@ -36,9 +37,21 @@ build-backend = "poetry.core.masonry.api"
 [tool.poetry.scripts]
 stock_summary_tool = "stock_summary.main:main"
 
+[tool.mypy]
+plugins = [
+  "pydantic.mypy"
+]
+
+[tool.pydantic-mypy]
+init_forbid_extra = true
+init_typed = true
+warn_required_dynamic_aliases = true
+warn_untyped_fields = true
+
 [[tool.mypy.overrides]]
 module = "plotly.*"
 ignore_missing_imports= true
+
 
 [tool.pylint.overrides]
 disable = ["W1203"]

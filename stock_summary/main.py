@@ -60,9 +60,9 @@ def generate_portfolio_main() -> None:
             if not row:
                 continue
             count = float(row[2])
-            conversion_rate = conversion_rates[prices[row[1]]["currency"]]
+            conversion_rate = conversion_rates[prices[row[1]].currency]
             init_value += float(row[4])
-            curr_value += count * prices[row[1]]["regularMarketPrice"] * conversion_rate
+            curr_value += count * prices[row[1]].regularMarketPrice * conversion_rate
     with open(settings.PORTFOLIO_PATH, "a", encoding="utf-8") as result_file:
         now = datetime.datetime.now()
         result_file.write(
@@ -128,7 +128,7 @@ def add_entry_main() -> None:
         price = float(options.price)
     except TypeError as err:
         raise RuntimeError("parameters have bad types, please try again") from err
-    currency = get_pair_prices(get_pairs())[options.stock]["currency"]
+    currency = get_pair_prices(get_pairs())[options.stock].currency
     converted_amount = convert_currency(date, currency, "CZK", count * price)
     save_entry(options.date, pair, options.count, options.price, converted_amount)
     logging.info(

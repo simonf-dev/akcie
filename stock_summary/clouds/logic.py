@@ -27,6 +27,7 @@ def get_cloud(cloud_type: Optional[CloudType] = None) -> Optional[Azure]:
     cloud = Azure(settings.AZURE_CONNECTION_STR)
     return cloud
 
+
 def sync_files_down(
     cloud_type: Optional[CloudType] = None,
     paths: Optional[Sequence[pathlib.Path]] = None,
