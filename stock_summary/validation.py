@@ -1,7 +1,7 @@
 """Validation for stock_summary app."""
 from typing import Any, Dict, List
 
-from pydantic import BaseModel, ValidationError, validator
+from pydantic import BaseModel, validator
 
 
 class ExchangeRates(BaseModel):
