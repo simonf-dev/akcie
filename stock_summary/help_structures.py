@@ -18,14 +18,6 @@ class LoggingSettings(Enum):
     LOGGING_LEVEL = logging.DEBUG
 
 
-class PairResponse(TypedDict):
-    """Pair response that we get from API for each pair."""
-
-    symbol: str
-    regularMarketPrice: float
-    currency: str
-
-
 class SummaryDict(TypedDict):
     """This dict is used to summarize entries for view Jinja HTML"""
 
