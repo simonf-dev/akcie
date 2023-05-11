@@ -1,5 +1,5 @@
 """Validation for stock_summary app."""
-from typing import Any, Dict, List
+from typing import Any, Dict, Set
 
 from pydantic import BaseModel, validator
 
@@ -43,8 +43,7 @@ class ExchangeRates(BaseModel):
 
 class PairResponse(BaseModel):
     """Pair response that we get from API for each pair."""
-
-    pairs: List[str] = []
+    pairs: Set[str] = set()
     symbol: str
     regularMarketPrice: float
     currency: str
