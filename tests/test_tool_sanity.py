@@ -29,6 +29,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 from stock_summary.library import get_dividend_sum, get_entries_summary, get_pairs
+from stock_summary.validation import PairResponse
 from stock_summary.settings import INIT_DATASETS_PATH
 
 TESTING_DATASETS_PATH = Path(__file__).parent.resolve() / "testing_data"
@@ -46,10 +47,11 @@ def test_entries_summary() -> None:
     # A-20 B-10 kurz - 24
     # A-25 B-6 kurz - 25
     # A-25 B-6 kurz - 24
+    PairResponse.pairs = {"A", "B"}
     with patch("stock_summary.library.get_pair_prices") as pair_prices_mock:
         pair_prices_mock.return_value = {
-            "A": {"currency": "EUR", "regularMarketPrice": 20, "symbol": "A"},
-            "B": {"currency": "EUR", "regularMarketPrice": 10, "symbol": "B"},
+            "A": PairResponse(currency="EUR", regularMarketPrice=20, symbol="A"),
+            "B":  PairResponse(currency="EUR", regularMarketPrice=10, symbol="B"),
         }
         with patch("stock_summary.library.get_exchange_rates") as exchange_mock:
             exchange_mock.return_value = {"EUR": 25}
@@ -103,8 +105,8 @@ def test_entries_summary() -> None:
                 == expected_sum_dict
             )
             pair_prices_mock.return_value = {
-                "A": {"currency": "EUR", "regularMarketPrice": 25, "symbol": "A"},
-                "B": {"currency": "EUR", "regularMarketPrice": 6, "symbol": "B"},
+                "A": PairResponse(currency="EUR", regularMarketPrice=25, symbol="A"),
+                "B": PairResponse(currency="EUR", regularMarketPrice=6, symbol="B"),
             }
             expected_sum_dict = {
                 "A": {

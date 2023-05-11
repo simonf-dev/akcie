@@ -7,24 +7,18 @@ import os
 import pathlib
 import shutil
 from functools import lru_cache
-from typing import Any, Dict, List, Mapping, Optional
+from typing import Any, Dict, List, Mapping, Optional, Set
 
 import dotenv
 import pandas as pd
 import plotly.graph_objects as go
 import requests
 from plotly.subplots import make_subplots
+from pydantic import parse_obj_as
 
 from stock_summary import settings
-from stock_summary.help_structures import Dividend, PairResponse, SummaryDict
-
-
-def check_pair_responses(pairs: List[PairResponse]) -> None:
-    """Do same basic checks on incoming responses from API for stock prices."""
-    for pair in pairs:
-        if pair["regularMarketPrice"] <= 0:
-            raise ValueError(f"Entered symbol {pair['symbol']} has invalid price <=0.")
-    logging.debug(f"Successfully checked responses for {pairs}")
+from stock_summary.help_structures import Dividend, SummaryDict
+from stock_summary.validation import ExchangeRates, PairResponse
 
 
 @lru_cache()
@@ -44,14 +38,15 @@ def get_exchange_rates(
         headers=settings.EXCHANGE_RATE_HEADERS,
         params={"base": base_pair},
     )
+    exchange_response = ExchangeRates(base_requested="CZK", **json.loads(response.text))
     exchange_dict = {}
-    for key, value in json.loads(response.text)["rates"].items():
+    for key, value in exchange_response.rates.items():
         exchange_dict[key] = 1 / value
     logging.debug("Returning exchange dict %s", exchange_dict)
     return exchange_dict
 
 
-def get_pair_prices(pairs: List[str]) -> Dict[str, PairResponse]:
+def get_pair_prices(pairs: Set[str]) -> Dict[str, PairResponse]:
     """
     Search for price on url and xpath, if error occurs, raises error.
     """
@@ -61,11 +56,13 @@ def get_pair_prices(pairs: List[str]) -> Dict[str, PairResponse]:
         "GET", url, headers=settings.STOCK_PRICE_HEADERS, timeout=10
     )
     logging.debug("Requesting URL %s with response %s", url, response)
-    result_list: List[PairResponse] = json.loads(response.text)
-    check_pair_responses(result_list)
+    PairResponse.pairs = set(pairs)
+    result_list: List[PairResponse] = parse_obj_as(
+        List[PairResponse], json.loads(response.text)
+    )
     result_dict = {}
     for result in result_list:
-        result_dict[result["symbol"]] = result
+        result_dict[result.symbol] = result
     logging.debug(f"Returning pair_prices {result_dict}")
     return result_dict
 
@@ -104,13 +101,13 @@ def get_entries_summary(
             entries_dict[entry[1]]["count"] += float(entry[2])
             entries_dict[entry[1]]["cost_basis"] += float(entry[4])
     exchange_rates = get_exchange_rates()
-    pair_prices = get_pair_prices(list(entries_dict.keys()))
+    pair_prices = get_pair_prices(set(entries_dict.keys()))
     for key, value in entries_dict.items():
-        value["currency"] = pair_prices[key]["currency"]
-        value["actual_price"] = pair_prices[key]["regularMarketPrice"]
+        value["currency"] = pair_prices[key].currency
+        value["actual_price"] = pair_prices[key].regularMarketPrice
         value["actual_basis"] = (
-            value["count"] * pair_prices[key]["regularMarketPrice"]
-        ) * exchange_rates[pair_prices[key]["currency"]]
+            value["count"] * pair_prices[key].regularMarketPrice
+        ) * exchange_rates[pair_prices[key].currency]
     logging.debug(f"Returning entries summary {entries_dict}")
     return entries_dict
 
@@ -208,7 +205,7 @@ def export_data(directory: pathlib.Path) -> None:
 
 def save_dividend(date: datetime.datetime, stock: str, amount: float) -> None:
     """Saves dividend into the file"""
-    currency = get_pair_prices([stock])[stock]["currency"]
+    currency = get_pair_prices({stock})[stock].currency
     converted_amount = convert_currency(date, currency, "CZK", amount)
     with open(settings.DIVIDEND_PATH, "a", newline="", encoding="utf-8") as csvfile:
         csv_writer = csv.writer(csvfile, delimiter=" ", quotechar="|")
@@ -245,9 +242,9 @@ def get_dividend_summary() -> Dict[str, Dividend]:
                 }
             dividend_summary[dividend[1]]["value"] += float(dividend[2])
             dividend_summary[dividend[1]]["converted_value"] += float(dividend[3])
-    pair_prices = get_pair_prices(list(dividend_summary.keys()))
+    pair_prices = get_pair_prices(set(dividend_summary.keys()))
     for key, value in dividend_summary.items():
-        value["currency"] = pair_prices[key]["currency"]
+        value["currency"] = pair_prices[key].currency
     return dividend_summary
 
 
@@ -262,14 +259,14 @@ def get_dividend_sum(dividend_path: pathlib.Path = settings.DIVIDEND_PATH) -> fl
     return sum_value
 
 
-def get_pairs(entries_path: pathlib.Path = settings.ENTRIES_PATH) -> List[str]:
+def get_pairs(entries_path: pathlib.Path = settings.ENTRIES_PATH) -> Set[str]:
     """Returns list of pairs."""
     with open(entries_path, newline="", encoding="utf-8") as csvfile:
         pair_lines = csv.reader(csvfile, delimiter=" ", quotechar="|")
         next(pair_lines)
         pairs = [pair[1].strip() for pair in pair_lines if pair]
         logging.debug("Getting pairs %s", pairs)
-        return list(set(pairs))
+        return set(pairs)
 
 
 def save_entry(

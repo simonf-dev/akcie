@@ -1,5 +1,5 @@
 pylint-check:
-	poetry run pylint stock_summary tests/
+	poetry run pylint --load-plugins pylint_pydantic stock_summary tests/
 .PHONY: pylint-check
 
 type-check:
