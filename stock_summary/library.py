@@ -55,10 +55,10 @@ def get_pair_prices(pairs: Set[str]) -> Dict[str, PairResponse]:
     response = requests.request(
         "GET", url, headers=settings.STOCK_PRICE_HEADERS, timeout=10
     )
-    logging.debug("Requesting URL %s with response %s", url, response)
+    logging.debug("Requesting URL %s with response %s", url, response.text)
     PairResponse.pairs = set(pairs)
     result_list: List[PairResponse] = parse_obj_as(
-        List[PairResponse], json.loads(response.text)
+        List[PairResponse], json.loads(response.text)["body"]
     )
     result_dict = {}
     for result in result_list:
@@ -103,11 +103,12 @@ def get_entries_summary(
     exchange_rates = get_exchange_rates()
     pair_prices = get_pair_prices(set(entries_dict.keys()))
     for key, value in entries_dict.items():
-        value["currency"] = pair_prices[key].currency
-        value["actual_price"] = pair_prices[key].regularMarketPrice
-        value["actual_basis"] = (
-            value["count"] * pair_prices[key].regularMarketPrice
-        ) * exchange_rates[pair_prices[key].currency]
+        if value["count"] != 0:
+            value["currency"] = pair_prices[key].currency
+            value["actual_price"] = pair_prices[key].regularMarketPrice
+            value["actual_basis"] = (
+                value["count"] * pair_prices[key].regularMarketPrice
+            ) * exchange_rates[pair_prices[key].currency]
     logging.debug(f"Returning entries summary {entries_dict}")
     return entries_dict
 

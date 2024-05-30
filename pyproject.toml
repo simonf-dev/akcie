@@ -17,6 +17,7 @@ appdirs = "^1.4.4"
 azure-storage-file-share = "^12.11.1"
 python-dotenv = "^1.0.0"
 pydantic = "^1.10.7"
+appeal = "^0.6.1"
 
 [tool.poetry.group.dev.dependencies]
 mypy = "0.991"
@@ -52,8 +53,10 @@ warn_untyped_fields = true
 [[tool.mypy.overrides]]
 module = "plotly.*"
 ignore_missing_imports= true
-
-
+[[tool.mypy.overrides]]
+module = "appeal.*"
+ignore_missing_imports= true
+disallow_untyped_decorators = true
 [tool.pylint.overrides]
 disable = ["W1203"]
 fail-under = 9.5
